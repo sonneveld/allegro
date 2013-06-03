@@ -1708,7 +1708,7 @@ void _soft_triangle3d_f(BITMAP *bmp, int type, BITMAP *texture, V3D_f *v1, V3D_f
  */
 void _soft_quad3d(BITMAP *bmp, int type, BITMAP *texture, V3D *v1, V3D *v2, V3D *v3, V3D *v4)
 {
-   #if (defined ALLEGRO_GCC) && (defined ALLEGRO_I386)
+   #if 0 && (defined ALLEGRO_GCC) && (defined ALLEGRO_I386)
       ASSERT(bmp);
 
       /* dodgy assumption alert! See comments for triangle() */
@@ -1735,7 +1735,7 @@ void _soft_quad3d(BITMAP *bmp, int type, BITMAP *texture, V3D *v1, V3D *v2, V3D 
  */
 void _soft_quad3d_f(BITMAP *bmp, int type, BITMAP *texture, V3D_f *v1, V3D_f *v2, V3D_f *v3, V3D_f *v4)
 {
-   #if (defined ALLEGRO_GCC) && (defined ALLEGRO_I386)
+   #if 0 && (defined ALLEGRO_GCC) && (defined ALLEGRO_I386)
       ASSERT(bmp);
 
       /* dodgy assumption alert! See comments for triangle() */
