@@ -335,6 +335,19 @@ set(ALLEGRO_SRC_PSP_FILES
         src/psp/pvram.c
         src/psp/pvtable8.c
         )
+		
+set(ALLEGRO_SRC_IOS_FILES
+        src/ios/idrivers.c
+        src/ios/isound.c
+        src/ios/ifile.c
+        src/ios/igfx.c
+        src/ios/ikey.c
+        src/ios/isystem.c
+        src/ios/imouse.c
+        src/ios/itimer.c
+        src/ios/ithreads.c
+        src/misc/colconv.c
+        )
 
 set(ALLEGRO_INCLUDE_ALLEGRO_FILES
         include/allegro/3d.h
@@ -401,6 +414,7 @@ set(ALLEGRO_INCLUDE_ALLEGRO_PLATFORM_FILES
         include/allegro/platform/aintmac.h
         include/allegro/platform/aintosx.h
         include/allegro/platform/aintpsp.h
+        include/allegro/platform/aintios.h
         include/allegro/platform/aintqnx.h
         include/allegro/platform/aintunix.h
         include/allegro/platform/aintwin.h
@@ -422,6 +436,8 @@ set(ALLEGRO_INCLUDE_ALLEGRO_PLATFORM_FILES
         # include/allegro/platform/alplatf.h.cmake
         include/allegro/platform/alpsp.h
         include/allegro/platform/alpspcfg.h
+        include/allegro/platform/alios.h
+        include/allegro/platform/alioscfg.h
         include/allegro/platform/alqnx.h
         include/allegro/platform/alqnxcfg.h
         include/allegro/platform/alucfg.h

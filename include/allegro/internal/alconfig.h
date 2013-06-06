@@ -14,7 +14,7 @@
  *
  *      See readme.txt for copyright information.
  */
-
+#define ALLEGRO_IOS
 
 /* which color depths to include? */
 #define ALLEGRO_COLOR8
@@ -62,6 +62,8 @@
       #include "allegro/platform/alucfg.h"
    #elif defined ALLEGRO_PSP
       #include "allegro/platform/alpspcfg.h"
+   #elif defined ALLEGRO_IOS
+      #include "allegro/platform/alioscfg.h"   
    #else
       #error platform not supported
    #endif

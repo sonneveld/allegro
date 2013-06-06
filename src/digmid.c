@@ -13,6 +13,8 @@
  *      By Shawn Hargreaves, based on code by Tom Novelli.
  *      Chris Robinson added some optimizations and the digmid_set_pan method.
  *
+ *      Modified for the Adventure Game Studio runtime port by JJS.
+ *
  *      See readme.txt for copyright information.
  */
 
@@ -520,7 +522,7 @@ static int digmid_load_patches(AL_CONST char *patches, AL_CONST char *drums)
 {
    PACKFILE *f;
    char dir[1024], file[1024], buf[1024], filename[1024];
-   char todo[256][1024];
+   char* todo[256];
    char *argv[16], *p;
    char tmp[128];
    int argc;
@@ -530,9 +532,12 @@ static int digmid_load_patches(AL_CONST char *patches, AL_CONST char *drums)
    int drum_start = 0;
    int type, size;
    int i, j, c;
+   
+   for (i = 0; i < 256; i++)
+      todo[i] = (char*)malloc(1024);
 
    if (!_digmid_find_patches(dir, sizeof(dir), file, sizeof(file)))
-      return -1;
+      goto error_exit;
 
    for (i=0; i<256; i++)
       usetc(todo[i], 0);
@@ -542,7 +547,7 @@ static int digmid_load_patches(AL_CONST char *patches, AL_CONST char *drums)
 
    f = pack_fopen(buf, F_READ);
    if (!f)
-      return -1;
+      goto error_exit;
 
    while (pack_fgets(buf, sizeof(buf), f) != 0) {
       argc = parse_string(buf, argv);
@@ -584,7 +589,7 @@ static int digmid_load_patches(AL_CONST char *patches, AL_CONST char *drums)
 
 		  if (!patch[patchnum]) {
 		     /* need to load this sample */
-		     ustrzcpy(todo[patchnum], sizeof(todo[patchnum]), argv[1]);
+		     ustrzcpy(todo[patchnum], 1024, argv[1]);
 		  }
 	       }
 	    }
@@ -608,13 +613,13 @@ static int digmid_load_patches(AL_CONST char *patches, AL_CONST char *drums)
 
       f = pack_fopen(dir, F_READ_PACKED);
       if (!f)
-	 return -1;
+	 goto error_exit;
 
       if (((ugetc(dir) == '#') && (ustrlen(dir) == 1)) || (!ustrchr(dir, '#'))) {
 	 type = pack_mgetl(f);
 	 if (type != DAT_MAGIC) {
 	    pack_fclose(f);
-	    return -1;
+	    goto error_exit;
 	 }
       }
 
@@ -675,6 +680,7 @@ static int digmid_load_patches(AL_CONST char *patches, AL_CONST char *drums)
 	    pack_fseek(f, size+4);
 	 }
       }
+      pack_fclose(f);
    }
    else {
       /* read from regular disk files */
@@ -706,7 +712,16 @@ static int digmid_load_patches(AL_CONST char *patches, AL_CONST char *drums)
       }
    }
 
+   for (i = 0; i < 256; i++)
+      free(todo[i]);
+
    return 0;
+
+error_exit:
+
+    for (i = 0; i < 256; i++)
+       free(todo[i]);
+   return -1;
 }
 
 
