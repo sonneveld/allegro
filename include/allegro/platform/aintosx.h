@@ -42,6 +42,7 @@
 #define OSX_GFX_NONE                    0
 #define OSX_GFX_WINDOW                  1
 #define OSX_GFX_FULL                    2
+#define OSX_GFX_GL_WINDOW               3
 
 #define BMP_EXTRA(bmp)                  ((BMP_EXTRA_INFO *)((bmp)->extra))
 
@@ -86,6 +87,10 @@
 - (void)resetCursorRects;
 @end
 
+@interface AllegroCocoaGLView: NSOpenGLView
+- (void)resetCursorRects;
+- (id) initWithFrame: (NSRect) frame;
+@end
 
 typedef void RETSIGTYPE;
 
@@ -141,6 +146,8 @@ BITMAP *osx_qz_create_system_bitmap(int width, int height);
 void osx_qz_destroy_video_bitmap(BITMAP *bmp);
 int osx_setup_colorconv_blitter(void);
 void osx_update_dirty_lines(void);
+
+void osx_gl_render(void);
 
 uintptr_t osx_qz_write_line(BITMAP *bmp, int lyne);
 void osx_qz_unwrite_line(BITMAP *bmp);

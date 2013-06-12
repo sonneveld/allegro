@@ -92,8 +92,10 @@ AL_VAR(MOUSE_DRIVER, mouse_macosx);
 /* Gfx drivers */
 #define GFX_QUARTZ_WINDOW       AL_ID('Q','Z','W','N')
 #define GFX_QUARTZ_FULLSCREEN   AL_ID('Q','Z','F','L')
+#define GFX_COCOAGL_WINDOW      AL_ID('C','O','W','N')
 AL_VAR(GFX_DRIVER, gfx_quartz_window);
 AL_VAR(GFX_DRIVER, gfx_quartz_full);
+AL_VAR(GFX_DRIVER, gfx_cocoagl_window);
 
 /* Digital sound drivers */
 #define DIGI_CORE_AUDIO         AL_ID('D','C','A',' ')

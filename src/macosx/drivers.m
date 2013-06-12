@@ -49,6 +49,7 @@ _DRIVER_INFO _mouse_driver_list[] =
 BEGIN_GFX_DRIVER_LIST
 {   GFX_QUARTZ_FULLSCREEN,    &gfx_quartz_full,         TRUE  },
 {   GFX_QUARTZ_WINDOW,        &gfx_quartz_window,       TRUE  },
+{   GFX_COCOAGL_WINDOW,       &gfx_cocoagl_window,     TRUE  },
 END_GFX_DRIVER_LIST
 
 

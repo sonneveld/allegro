@@ -130,6 +130,8 @@ static BOOL in_bundle(void)
    while (!ready_to_terminate) {
       if (osx_gfx_mode == OSX_GFX_WINDOW)
          osx_update_dirty_lines();
+      if (osx_gfx_mode == OSX_GFX_GL_WINDOW)
+         osx_gl_render();
       _unix_lock_mutex(osx_event_mutex);
       if (osx_gfx_mode == OSX_GFX_FULL) {
          if ((osx_palette) && (osx_palette_dirty)) {
