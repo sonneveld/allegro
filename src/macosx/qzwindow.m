@@ -24,6 +24,7 @@
    #error something is wrong with the makefile
 #endif
 
+#ifdef ENABLE_QUICKDRAW
 
 static BITMAP *osx_qz_window_init(int, int, int, int, int);
 static void osx_qz_window_exit(BITMAP *);
@@ -55,8 +56,6 @@ static char *dirty_lines = NULL;
 static GFX_VTABLE _special_vtable; /* special vtable for active video page */
 static GFX_VTABLE _unspecial_vtable; /* special vtable for inactive video page */
 static BITMAP* current_video_page = NULL;
-
-void* osx_window_mutex;
 
 
 GFX_DRIVER gfx_quartz_window =
@@ -97,8 +96,6 @@ GFX_DRIVER gfx_quartz_window =
    TRUE
 };
 
-
-
 /* prepare_window_for_animation:
  *  Prepares the window for a (de)miniaturization animation.
  *  Called by the window display method when the window is about to be
@@ -107,123 +104,40 @@ GFX_DRIVER gfx_quartz_window =
  *  When called from the miniaturize window method, only the alpha value
  *  is updated.
  */
-static void prepare_window_for_animation(int refresh_view)
+void prepare_window_for_animation(int refresh_view)
 {
-   struct GRAPHICS_RECT src_gfx_rect, dest_gfx_rect;
-   unsigned int *addr;
-   int pitch, y, x;
-   
-   _unix_lock_mutex(osx_window_mutex);
-   while (![qd_view lockFocusIfCanDraw]);
-   while (!QDDone([qd_view qdPort]));
-   LockPortBits([qd_view qdPort]);
-   pitch = GetPixRowBytes(GetPortPixMap([qd_view qdPort])) / 4;
-   addr = (unsigned int *)GetPixBaseAddr(GetPortPixMap([qd_view qdPort])) +
-      ((int)([osx_window frame].size.height) - gfx_quartz_window.h) * pitch;
-   if (refresh_view && colorconv_blitter) {
-      src_gfx_rect.width  = gfx_quartz_window.w;
-      src_gfx_rect.height = gfx_quartz_window.h;
-      src_gfx_rect.pitch  = pseudo_screen_pitch;
-      src_gfx_rect.data   = pseudo_screen_addr;
-      dest_gfx_rect.pitch = pitch * 4;
-      dest_gfx_rect.data  = addr;
-      colorconv_blitter(&src_gfx_rect, &dest_gfx_rect);
-   }
-   for (y = gfx_quartz_window.h; y; y--) {
-      for (x = 0; x < gfx_quartz_window.w; x++)
-         *(addr + x) |= 0xff000000;
-      addr += pitch;
-   }
-   UnlockPortBits([qd_view qdPort]);
-   [qd_view unlockFocus];
-   _unix_unlock_mutex(osx_window_mutex);
+    struct GRAPHICS_RECT src_gfx_rect, dest_gfx_rect;
+    unsigned int *addr;
+    int pitch, y, x;
+
+    if (desktop_depth != 32)
+        return;
+    
+    _unix_lock_mutex(osx_window_mutex);
+    while (![qd_view lockFocusIfCanDraw]);
+    while (!QDDone([qd_view qdPort]));
+    LockPortBits([qd_view qdPort]);
+    pitch = GetPixRowBytes(GetPortPixMap([qd_view qdPort])) / 4;
+    addr = (unsigned int *)GetPixBaseAddr(GetPortPixMap([qd_view qdPort])) +
+    ((int)([osx_window frame].size.height) - gfx_quartz_window.h) * pitch;
+    if (refresh_view && colorconv_blitter) {
+        src_gfx_rect.width  = gfx_quartz_window.w;
+        src_gfx_rect.height = gfx_quartz_window.h;
+        src_gfx_rect.pitch  = pseudo_screen_pitch;
+        src_gfx_rect.data   = pseudo_screen_addr;
+        dest_gfx_rect.pitch = pitch * 4;
+        dest_gfx_rect.data  = addr;
+        colorconv_blitter(&src_gfx_rect, &dest_gfx_rect);
+    }
+    for (y = gfx_quartz_window.h; y; y--) {
+        for (x = 0; x < gfx_quartz_window.w; x++)
+            *(addr + x) |= 0xff000000;
+        addr += pitch;
+    }
+    UnlockPortBits([qd_view qdPort]);
+    [qd_view unlockFocus];
+    _unix_unlock_mutex(osx_window_mutex);
 }
-
-
-
-@implementation AllegroWindow
-
-/* display:
- *  Called when the window is about to be deminiaturized.
- */
-- (void)display
-{
-   [super display];
-   if (desktop_depth == 32)
-      prepare_window_for_animation(TRUE);
-}
-
-
-
-/* miniaturize:
- *  Called when the window is miniaturized.
- */
-- (void)miniaturize: (id)sender
-{
-   if (desktop_depth == 32)
-      prepare_window_for_animation(FALSE);
-   [super miniaturize: sender];
-}
-
-@end
-
-
-
-@implementation AllegroWindowDelegate
-
-/* windowShouldClose:
- *  Called when the user attempts to close the window.
- *  Default behaviour is to call the user callback (if any) and deny closing.
- */
-- (BOOL)windowShouldClose: (id)sender
-{
-   if (osx_window_close_hook)
-      osx_window_close_hook();
-   return NO;
-}
-
-
-
-/* windowDidDeminiaturize:
- *  Called when the window deminiaturization animation ends; marks the whole
- *  window contents as dirty, so it is updated on next refresh.
- */
-- (void)windowDidDeminiaturize: (NSNotification *)aNotification
-{
-   _unix_lock_mutex(osx_window_mutex);
-   memset(dirty_lines, 1, gfx_quartz_window.h);
-   _unix_unlock_mutex(osx_window_mutex);
-}
-
-
-
-/* windowDidBecomeKey:
- * Sent by the default notification center immediately after an NSWindow
- * object has become key.
- */
-- (void)windowDidBecomeKey:(NSNotification *)notification
-{
-   _unix_lock_mutex(osx_skip_events_processing_mutex);
-   osx_skip_events_processing = FALSE;
-   _unix_unlock_mutex(osx_skip_events_processing_mutex);
-}
-
-
-
-/* windowDidResignKey:
- * Sent by the default notification center immediately after an NSWindow
- * object has resigned its status as key window.
- */
-- (void)windowDidResignKey:(NSNotification *)notification
-{
-   _unix_lock_mutex(osx_skip_events_processing_mutex);
-   osx_skip_events_processing = TRUE;
-   _unix_unlock_mutex(osx_skip_events_processing_mutex);
-}
-
-@end
-
-
 
 @implementation AllegroView
 
@@ -269,7 +183,10 @@ static void osx_qz_release_win(BITMAP *bmp)
 	_unix_unlock_mutex(osx_window_mutex);
 }
 
-
+void osx_qz_mark_dirty()
+{
+    memset(dirty_lines, 1, gfx_quartz_window.h);
+}
 
 /* osx_qz_write_line_win:
  *  Line switcher for Quartz windowed mode.
@@ -810,6 +727,9 @@ static void osx_destroy_video_bitmap(BITMAP* bm)
 	}
 	// Otherwise it wasn't a video page
 }
+
+#endif
+
 /* Local variables:       */
 /* c-basic-offset: 3      */
 /* indent-tabs-mode: nil  */

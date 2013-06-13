@@ -24,6 +24,7 @@
    #error something is wrong with the makefile
 #endif
 
+#ifdef ENABLE_QUICKDRAW
 
 #define FADE_STEPS               16
 
@@ -455,3 +456,4 @@ static GFX_MODE_LIST *osx_qz_fetch_mode_list(void)
    return gfx_mode_list;
 }
 
+#endif

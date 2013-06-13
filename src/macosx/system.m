@@ -595,10 +595,17 @@ static int osx_sys_set_display_switch_mode(int mode)
  */
 static void osx_sys_get_gfx_safe_mode(int *driver, struct GFX_MODE *mode)
 {
+#ifdef ENABLE_QUICKDRAW
    *driver = GFX_QUARTZ_WINDOW;
    mode->width = 320;
    mode->height = 200;
    mode->bpp = 8;
+#else
+   *driver = GFX_COCOAGL_WINDOW;
+   mode->width = 640;
+   mode->height = 480;
+   mode->bpp = 32;
+#endif
 }
 
 

@@ -107,6 +107,7 @@ option(MAGIC_MAIN "Enable magic main (Unix)" off)
 option(WANT_FRAMEWORKS "Want frameworks on Mac OS X" off)
 option(WANT_EMBED
     "Make frameworks embeddable in application bundles (Mac OS X)" on)
+option(ENABLE_QUICKDRAW "Enable Quick Graphics on OS X" OFF)
 
 set(FRAMEWORK_INSTALL_PREFIX "/Library/Frameworks" CACHE STRING
     "Directory in which to install Mac OS X frameworks")
@@ -643,6 +644,13 @@ endif(BEOS)
 
 if(ALLEGRO_MACOSX)
     list(APPEND PLATFORM_SOURCES ${ALLEGRO_SRC_MACOSX_FILES})
+    IF(ENABLE_QUICKDRAW)
+      SET_SOURCE_FILES_PROPERTIES(
+        ${ALLEGRO_SRC_MACOSX_FILES}
+        PROPERTIES
+            COMPILE_FLAGS ENABLE_QUICKDRAW
+      )
+    ENDIF()
     if(NOT SHARED)
 	list(APPEND PLATFORM_SOURCES src/macosx/main.m)
     endif(NOT SHARED)

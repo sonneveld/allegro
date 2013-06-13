@@ -128,17 +128,21 @@ static BOOL in_bundle(void)
       withObject: nil];
    
    while (!ready_to_terminate) {
+#ifdef ENABLE_QUICKDRAW
       if (osx_gfx_mode == OSX_GFX_WINDOW)
          osx_update_dirty_lines();
+#endif
       if (osx_gfx_mode == OSX_GFX_GL_WINDOW)
          osx_gl_render();
       _unix_lock_mutex(osx_event_mutex);
+#ifdef ENABLE_QUICKDRAW
       if (osx_gfx_mode == OSX_GFX_FULL) {
-         if ((osx_palette) && (osx_palette_dirty)) {
-            CGDisplaySetPalette(kCGDirectMainDisplay, osx_palette);
-	    osx_palette_dirty = FALSE;
-	 }
-      }
+        if ((osx_palette) && (osx_palette_dirty)) {
+           CGDisplaySetPalette(kCGDirectMainDisplay, osx_palette);
+           osx_palette_dirty = FALSE;
+        }
+     }
+#endif
       osx_event_handler();
       _unix_unlock_mutex(osx_event_mutex);
       usleep(1000000 / refresh_rate);
@@ -159,12 +163,13 @@ static BOOL in_bundle(void)
 {
    CFDictionaryRef mode;
    int new_refresh_rate;
-   
+#ifdef ENABLE_QUICKDRAW
    if ((osx_window) && (osx_gfx_mode == OSX_GFX_WINDOW)) 
    {
       osx_setup_colorconv_blitter();
       [osx_window display];
    }
+#endif
    mode = CGDisplayCurrentMode(kCGDirectMainDisplay);
    CFNumberGetValue(CFDictionaryGetValue(mode, kCGDisplayRefreshRate), kCFNumberSInt32Type, &new_refresh_rate);
    if (new_refresh_rate <= 0)

@@ -316,6 +316,7 @@ set(ALLEGRO_SRC_MACOSX_FILES
         src/macosx/soundman.m
         src/macosx/system.m
         src/macosx/cocoagl.m
+        src/macosx/cocoashared.m
         src/unix/ufile.c
         src/unix/utimer.c
         src/unix/uptimer.c
