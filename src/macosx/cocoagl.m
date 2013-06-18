@@ -175,7 +175,8 @@ static void osx_gl_window_exit(BITMAP *bmp)
         [osx_window close];
         osx_window = nil;
     }
-    destroy_bitmap(displayed_video_bitmap);
+//    destroy_bitmap(displayed_video_bitmap);
+    displayed_video_bitmap = NULL;
     _unix_destroy_mutex(osx_window_mutex);
     osx_gfx_mode = OSX_GFX_NONE;
 
