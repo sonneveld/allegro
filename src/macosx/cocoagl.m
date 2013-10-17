@@ -48,6 +48,9 @@ static void osx_gl_create_screen_texture(int width, int height, int color_depth)
 static void osx_gl_setup_arrays(int width, int height);
 
 static GLuint osx_screen_texture = 0;
+static int osx_screen_color_depth = 0;
+static GLuint osx_texture_format = GL_RGBA;
+static GLenum osx_texture_storage = GL_UNSIGNED_BYTE;
 
 
 GFX_DRIVER gfx_cocoagl_window =
@@ -95,7 +98,7 @@ static BITMAP *osx_gl_window_init(int w, int h, int v_w, int v_h, int color_dept
 
     _unix_lock_mutex(osx_event_mutex);
 
-    if (color_depth != 8 && color_depth != 32)
+    if (color_depth != 8 && color_depth != 32 && color_depth != 16)
         ustrzcpy(allegro_error, ALLEGRO_ERROR_SIZE, get_config_text("Unsupported color depth"));
 
     /* final blit will be in 32bit even in palette mode */
@@ -103,6 +106,7 @@ static BITMAP *osx_gl_window_init(int w, int h, int v_w, int v_h, int color_dept
         color_depth = 32;
 
     displayed_video_bitmap = create_bitmap_ex(color_depth, w, h);
+    osx_screen_color_depth = color_depth;
 
     gfx_cocoagl_window.w = w;
     gfx_cocoagl_window.h = h;
@@ -221,7 +225,7 @@ static void osx_gl_setup()
 
 	glActiveTexture(GL_TEXTURE0);
 
-    osx_gl_create_screen_texture(gfx_cocoagl_window.w, gfx_cocoagl_window.h, 32);
+    osx_gl_create_screen_texture(gfx_cocoagl_window.w, gfx_cocoagl_window.h, osx_screen_color_depth);
     osx_gl_setup_arrays(gfx_cocoagl_window.w, gfx_cocoagl_window.h);
 
     glMatrixMode(GL_PROJECTION);
@@ -255,12 +259,14 @@ static void osx_gl_create_screen_texture(int width, int height, int color_depth)
     glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-    GLuint format = GL_RGBA;
-    GLuint internalFormat = GL_RGB;
-    if (color_depth != 32) {
+    if (color_depth == 16) {
+        osx_texture_format = GL_RGB;
+        osx_texture_storage = GL_UNSIGNED_SHORT_5_6_5;
+    } else if (color_depth != 32) {
         TRACE(PREFIX_I "unsupported color depth\n");
     }
-    glTexImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, NULL);
+
+    glTexImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, GL_RGB, width, height, 0, osx_texture_format, osx_texture_storage, NULL);
 }
 
 static void osx_gl_setup_arrays(int width, int height)
@@ -292,7 +298,7 @@ void osx_gl_render()
     [osx_gl_context makeCurrentContext];
     glTexSubImage2D(GL_TEXTURE_RECTANGLE_EXT, 0,
                     0, 0, gfx_cocoagl_window.w, gfx_cocoagl_window.h,
-                    GL_RGBA, GL_UNSIGNED_BYTE, displayed_video_bitmap->line[0]);
+                    osx_texture_format, osx_texture_storage, displayed_video_bitmap->line[0]);
     
     glClear(GL_COLOR_BUFFER_BIT);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
