@@ -239,6 +239,10 @@ static BITMAP *osx_gl_full_init(int w, int h, int v_w, int v_h, int color_depth)
 {
     BITMAP *bmp = osx_gl_real_init(w, h, v_w, v_h, color_depth, &gfx_cocoagl_full);
 
+    _unix_lock_mutex(osx_skip_events_processing_mutex);
+    osx_skip_events_processing = FALSE;
+    _unix_unlock_mutex(osx_skip_events_processing_mutex);
+
     return bmp;
 }
 
@@ -269,6 +273,10 @@ static void osx_gl_window_exit(BITMAP *bmp)
 
 static void osx_gl_full_exit(BITMAP *bmp)
 {
+    _unix_lock_mutex(osx_skip_events_processing_mutex);
+    osx_skip_events_processing = TRUE;
+    _unix_unlock_mutex(osx_skip_events_processing_mutex);
+
     osx_gl_window_exit(bmp);
 }
 
