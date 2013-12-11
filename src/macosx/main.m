@@ -132,7 +132,7 @@ static BOOL in_bundle(void)
       if (osx_gfx_mode == OSX_GFX_WINDOW)
          osx_update_dirty_lines();
 #endif
-      if (osx_gfx_mode == OSX_GFX_GL_WINDOW)
+      if (osx_gfx_mode == OSX_GFX_GL)
          osx_gl_render();
       _unix_lock_mutex(osx_event_mutex);
 #ifdef ENABLE_QUICKDRAW

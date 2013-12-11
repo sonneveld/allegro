@@ -51,7 +51,8 @@ BEGIN_GFX_DRIVER_LIST
 {   GFX_QUARTZ_FULLSCREEN,    &gfx_quartz_full,         TRUE  },
 {   GFX_QUARTZ_WINDOW,        &gfx_quartz_window,       TRUE  },
 #endif
-{   GFX_COCOAGL_WINDOW,       &gfx_cocoagl_window,     TRUE  },
+{   GFX_COCOAGL_FULLSCREEN,   &gfx_cocoagl_full,        TRUE  },
+{   GFX_COCOAGL_WINDOW,       &gfx_cocoagl_window,      TRUE  },
 END_GFX_DRIVER_LIST
 
 

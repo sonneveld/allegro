@@ -42,7 +42,7 @@
 #define OSX_GFX_NONE                    0
 #define OSX_GFX_WINDOW                  1
 #define OSX_GFX_FULL                    2
-#define OSX_GFX_GL_WINDOW               3
+#define OSX_GFX_GL                      3
 
 #define BMP_EXTRA(bmp)                  ((BMP_EXTRA_INFO *)((bmp)->extra))
 
@@ -89,7 +89,7 @@
 
 @interface AllegroCocoaGLView: NSOpenGLView
 - (void)resetCursorRects;
-- (id) initWithFrame: (NSRect) frame;
+- (id) initWithFrame: (NSRect) frame windowed:(BOOL)windowed;
 @end
 
 typedef void RETSIGTYPE;
