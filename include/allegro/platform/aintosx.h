@@ -72,8 +72,12 @@
 
 
 @interface AllegroWindow : NSWindow
+#ifdef ENABLE_QUICKDRAW
 - (void)display;
 - (void)miniaturize: (id)sender;
+#endif
+- (BOOL)canBecomeKeyWindow;
+- (BOOL)canBecomeMainWindow;
 @end
 
 
@@ -90,6 +94,7 @@
 @interface AllegroCocoaGLView: NSOpenGLView
 - (void)resetCursorRects;
 - (id) initWithFrame: (NSRect) frame windowed:(BOOL)windowed;
+- (BOOL)canBecomeKeyView;
 @end
 
 typedef void RETSIGTYPE;

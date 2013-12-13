@@ -189,10 +189,12 @@ static BITMAP *osx_gl_real_init(int w, int h, int v_w, int v_h, int color_depth,
     }
 
     set_window_title(osx_window_title);
-	[osx_window makeKeyAndOrderFront: nil];
 
     osx_gl_view = [[AllegroCocoaGLView alloc] initWithFrame: rect windowed:driver->windowed];
 	[osx_window setContentView: osx_gl_view];
+
+	[osx_window makeKeyAndOrderFront: nil];
+
     osx_gl_context = [[osx_gl_view openGLContext] retain];
 	[osx_gl_context makeCurrentContext];
 
@@ -216,6 +218,13 @@ static BITMAP *osx_gl_real_init(int w, int h, int v_w, int v_h, int color_depth,
     [osx_gl_context flushBuffer];
 
     [NSOpenGLContext clearCurrentContext];
+
+    if (!is_fullscreen) {
+        osx_mouse_tracking_rect = [osx_gl_view addTrackingRect: rect
+                                                         owner: NSApp
+                                                      userData: nil
+                                                  assumeInside: YES];
+    }
 
     osx_gfx_mode = OSX_GFX_GL;
     osx_skip_mouse_move = TRUE;
@@ -421,8 +430,8 @@ static NSOpenGLPixelFormat *init_pixel_format(int windowed)
 
     /* Always request one of fullscreen or windowed */
 	if (windowed) {
-//		*attrib++ = NSOpenGLPFAWindow;
-//		*attrib++ = NSOpenGLPFABackingStore;
+		*attrib++ = NSOpenGLPFAWindow;
+		*attrib++ = NSOpenGLPFABackingStore;
 	} else {
 //		*attrib++ = NSOpenGLPFAFullScreen;
 //		*attrib++ = NSOpenGLPFAScreenMask;
@@ -459,5 +468,10 @@ static NSOpenGLPixelFormat *init_pixel_format(int windowed)
         TRACE(PREFIX_W "Unable to find suitable pixel format\n");
 	}
 	return nil;
+}
+
+-(BOOL)canBecomeKeyView
+{
+    return YES;
 }
 @end

@@ -38,6 +38,16 @@ void* osx_window_mutex;
 }
 #endif
 
+- (BOOL)canBecomeKeyWindow
+{
+    return YES;
+}
+
+- (BOOL)canBecomeMainWindow
+{
+    return YES;
+}
+
 @end
 
 
