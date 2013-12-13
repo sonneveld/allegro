@@ -9,7 +9,7 @@
 // Quickdraw specific
 #ifdef ENABLE_QUICKDRAW
 void osx_qz_mark_dirty();
-void prepare_window_for_animation(int refresh_view)
+void prepare_window_for_animation(int refresh_view);
 #endif
 
 void* osx_window_mutex;

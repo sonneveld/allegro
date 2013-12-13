@@ -450,7 +450,7 @@ static NSOpenGLPixelFormat *init_pixel_format(int windowed)
 - (void)resetCursorRects
 {
     [super resetCursorRects];
-    [self addCursorRect: NSMakeRect(0, 0, gfx_driver->w, gfx_driver->h)
+    [self addCursorRect: [self visibleRect]
                  cursor: osx_cursor];
     [osx_cursor setOnMouseEntered: YES];
 }

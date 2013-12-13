@@ -149,6 +149,16 @@ static RETSIGTYPE osx_signal_handler(int num)
 }
 
 
+inline static void osx_scale_mouse(NSPointPointer position, const NSRectPointer window, const NSRectPointer view)
+{
+    // flip the vertical to top down
+    position->y = window->size.height - position->y;
+    if (!NSEqualSizes(window->size, view->size)) {
+        position->x = position->x / window->size.width * view->size.width;
+        position->y = position->y / window->size.height * view->size.height;
+    }
+}
+
 
 /* osx_event_handler:
  *  Event handling function; gets repeatedly called inside a dedicated thread.
@@ -178,19 +188,22 @@ void osx_event_handler()
 
       if ((skip_events_processing) || (osx_gfx_mode == OSX_GFX_NONE)) {
          [NSApp sendEvent: event];
-	 continue;
+         continue;
       }
       
       view = NSMakeRect(0, 0, gfx_driver->w, gfx_driver->h);
       point = [event locationInWindow];
       if (osx_window) 
       {
-	 frame = [[osx_window contentView] frame];
+         frame = [[osx_window contentView] frame];
       }
       else
       {
-	 frame = [[NSScreen mainScreen] frame];
+          frame = [[NSScreen mainScreen] frame];
       }
+
+      osx_scale_mouse(&point, &frame, &view);
+
       event_type = [event type];
       switch (event_type) {
 	 
@@ -220,10 +233,10 @@ void osx_event_handler()
 	       /* App is regaining focus */
 	       if (_mouse_installed) {
 	          if ((osx_window) && (NSPointInRect(point, view))) {
-                     mx = point.x;
-	             my = frame.size.height - point.y;
-		     buttons = 0;
-                     _mouse_on = TRUE;
+                 mx = point.x;
+                 my = point.y;
+                 buttons = 0;
+                 _mouse_on = TRUE;
 	          }
 	       }
 	       if (osx_window)
@@ -275,7 +288,7 @@ void osx_event_handler()
 	    dy += [event deltaY];
 
 	    mx=point.x;
-	    my=frame.size.height-point.y;
+	    my=point.y;
 
 	    [NSApp sendEvent: event];
 	    gotmouseevent = YES;
@@ -290,7 +303,7 @@ void osx_event_handler()
 	    if (([event trackingNumber] == osx_mouse_tracking_rect) && ([NSApp isActive])) {
 	       if (_mouse_installed) {
 		  mx = point.x;
-	          my = frame.size.height - point.y;
+	          my = point.y;
 		  buttons = 0;
                   _mouse_on = TRUE;
 		  gotmouseevent = YES;
