@@ -142,12 +142,8 @@ static BITMAP *osx_gl_real_init(int w, int h, int v_w, int v_h, int color_depth,
 
     _unix_lock_mutex(osx_event_mutex);
 
-    if (color_depth != 8 && color_depth != 32 && color_depth != 16)
+    if (color_depth != 32 && color_depth != 16)
         ustrzcpy(allegro_error, ALLEGRO_ERROR_SIZE, get_config_text("Unsupported color depth"));
-
-    /* final blit will be in 32bit even in palette mode */
-    if (color_depth == 8)
-        color_depth = 32;
 
     displayed_video_bitmap = create_bitmap_ex(color_depth, w, h);
     osx_screen_color_depth = color_depth;
