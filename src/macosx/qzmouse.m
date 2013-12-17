@@ -221,8 +221,12 @@ static void osx_mouse_position(int x, int y)
    if (osx_window) {
       screen_frame = [[NSScreen mainScreen] frame];
       frame = [osx_window frame];
+      // scale position
+      point.x *= (frame.size.width / gfx_driver->w);
+      point.y *= (frame.size.height / gfx_driver->h);
+
       point.x += frame.origin.x;
-      point.y += (screen_frame.size.height - (frame.origin.y + gfx_driver->h));
+      point.y += (screen_frame.size.height - (frame.origin.y + frame.size.height));
    }
    
    CGDisplayMoveCursorToPoint(kCGDirectMainDisplay, point);
