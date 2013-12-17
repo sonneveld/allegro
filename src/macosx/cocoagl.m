@@ -44,7 +44,6 @@ static AllegroWindowDelegate *osx_window_delegate = NULL;
 static AllegroCocoaGLView *osx_gl_view = NULL;
 static NSOpenGLContext *osx_gl_context;
 
-#define MAX_ATTRIBUTES           64
 static NSOpenGLPixelFormat *init_pixel_format(int windowed);
 static void osx_gl_setup(GFX_DRIVER*);
 static void osx_gl_destroy();
@@ -418,22 +417,26 @@ void osx_gl_render()
  * If this fails, just get the 'required' settings,
  * or nil if no format can be found
  */
+#define MAX_ATTRIBUTES           64
+
 static NSOpenGLPixelFormat *init_pixel_format(int windowed)
 {
     NSOpenGLPixelFormatAttribute attribs[MAX_ATTRIBUTES], *attrib;
 	attrib=attribs;
     *attrib++ = NSOpenGLPFADoubleBuffer;
+    *attrib++ = NSOpenGLPFAAccelerated;
+    *attrib++ = NSOpenGLPFAColorSize;
+    *attrib++ = 16;
 
     /* Always request one of fullscreen or windowed */
 	if (windowed) {
 		*attrib++ = NSOpenGLPFAWindow;
 		*attrib++ = NSOpenGLPFABackingStore;
 	} else {
-//		*attrib++ = NSOpenGLPFAFullScreen;
-//		*attrib++ = NSOpenGLPFAScreenMask;
-//		*attrib++ = CGDisplayIDToOpenGLDisplayMask(kCGDirectMainDisplay);
+		*attrib++ = NSOpenGLPFAFullScreen;
+		*attrib++ = NSOpenGLPFAScreenMask;
+		*attrib++ = CGDisplayIDToOpenGLDisplayMask(kCGDirectMainDisplay);
 	}
-    *attrib++ = NSOpenGLPFAAccelerated;
 	*attrib = 0;
 
 	NSOpenGLPixelFormat *pf = [[NSOpenGLPixelFormat alloc] initWithAttributes: attribs];
