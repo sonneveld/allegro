@@ -628,13 +628,10 @@ static void osx_sys_get_gfx_safe_mode(int *driver, struct GFX_MODE *mode)
  */
 static int osx_sys_desktop_color_depth(void)
 {
-   CFDictionaryRef mode = NULL;
    int color_depth;
    
-   mode = CGDisplayCurrentMode(kCGDirectMainDisplay);
-   if (!mode)
-      return -1;
-   CFNumberGetValue(CFDictionaryGetValue(mode, kCGDisplayBitsPerPixel), kCFNumberSInt32Type, &color_depth);
+   NSWindowDepth depth = [[NSScreen mainScreen] depth];
+   color_depth = NSBitsPerPixelFromDepth(depth);
    
    return color_depth == 16 ? 15 : color_depth;
 }
@@ -645,13 +642,9 @@ static int osx_sys_desktop_color_depth(void)
  */
 static int osx_sys_get_desktop_resolution(int *width, int *height)
 {
-   CFDictionaryRef mode = NULL;
-   
-   mode = CGDisplayCurrentMode(kCGDirectMainDisplay);
-   if (!mode)
-      return -1;
-   CFNumberGetValue(CFDictionaryGetValue(mode, kCGDisplayWidth), kCFNumberSInt32Type, width);
-   CFNumberGetValue(CFDictionaryGetValue(mode, kCGDisplayHeight), kCFNumberSInt32Type, height);
-   
-   return 0;
+   NSRect r = [[NSScreen mainScreen] frame];
+   *width = r.size.width;
+   *height = r.size.height;
+
+    return 0;
 }

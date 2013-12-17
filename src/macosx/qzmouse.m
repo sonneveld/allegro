@@ -211,8 +211,7 @@ static void osx_mouse_exit(void)
 static void osx_mouse_position(int x, int y)
 {
    CGPoint point;
-   NSRect frame;
-   int screen_height;
+   NSRect frame, screen_frame;
    
    _unix_lock_mutex(osx_event_mutex);
    
@@ -220,10 +219,10 @@ static void osx_mouse_position(int x, int y)
    _mouse_y = point.y = y;
    
    if (osx_window) {
-      CFNumberGetValue(CFDictionaryGetValue(CGDisplayCurrentMode(kCGDirectMainDisplay), kCGDisplayHeight), kCFNumberSInt32Type, &screen_height);
+      screen_frame = [[NSScreen mainScreen] frame];
       frame = [osx_window frame];
       point.x += frame.origin.x;
-      point.y += (screen_height - (frame.origin.y + gfx_driver->h));
+      point.y += (screen_frame.size.height - (frame.origin.y + gfx_driver->h));
    }
    
    CGDisplayMoveCursorToPoint(kCGDirectMainDisplay, point);
