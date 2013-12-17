@@ -167,7 +167,8 @@ static BITMAP *osx_gl_real_init(int w, int h, int v_w, int v_h, int color_depth,
     osx_window = [[AllegroWindow alloc] initWithContentRect: rect
 												  styleMask: styleMask
 													backing: NSBackingStoreBuffered
-													  defer: YES];
+													  defer: NO
+                                                     screen:[NSScreen mainScreen]];
 
     osx_window_delegate = [[[AllegroWindowDelegate alloc] init] autorelease];
     [osx_window setDelegate: (id<NSWindowDelegate>)osx_window_delegate];
@@ -176,9 +177,11 @@ static BITMAP *osx_gl_real_init(int w, int h, int v_w, int v_h, int color_depth,
     [osx_window setViewsNeedDisplay: NO];
     [osx_window setReleasedWhenClosed: YES];
     if (is_fullscreen) {
-        [osx_window setLevel:NSMainMenuWindowLevel+1];
+//        [osx_window setLevel:NSMainMenuWindowLevel+1];
+        [osx_window setLevel:CGShieldingWindowLevel()];
         [osx_window setOpaque:YES];
         [osx_window setHidesOnDeactivate:YES];
+        CGCaptureAllDisplays();
     } else {
         [osx_window center];
     }
