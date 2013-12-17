@@ -228,8 +228,10 @@ static void osx_mouse_position(int x, int y)
       point.x += frame.origin.x;
       point.y += (screen_frame.size.height - (frame.origin.y + frame.size.height));
    }
-   
-   CGDisplayMoveCursorToPoint(kCGDirectMainDisplay, point);
+
+   if (osx_gfx_mode != OSX_GFX_NONE) {
+      CGDisplayMoveCursorToPoint(kCGDirectMainDisplay, point);
+   }
    
    mymickey_x = mymickey_y = 0;
    osx_mouse_warped = TRUE;
