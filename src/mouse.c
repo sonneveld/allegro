@@ -1012,9 +1012,9 @@ static void set_mouse_etc(void)
    else
       hw_cursor_dirty = TRUE;
 
+   position_mouse(SCREEN_W/2, SCREEN_H/2);
    set_mouse_range(0, 0, SCREEN_W-1, SCREEN_H-1);
    set_mouse_speed(2, 2);
-   position_mouse(SCREEN_W/2, SCREEN_H/2);
 }
 
 
