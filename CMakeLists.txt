@@ -447,6 +447,15 @@ if(ALLEGRO_UNIX) # not MACOSX
         endif(ALSA_FOUND)
     endif(WANT_ALSA)
 
+    pkg_check_modules(SDL2 sdl2)
+    if(SDL2_FOUND)
+        set(ALLEGRO_WITH_SDL2DIGI 1)
+        include_directories(SYSTEM ${SDL2_INCLUDE_DIRS})
+        link_directories(${SDL2_LIBRARY_DIRS})
+        list(APPEND PLATFORM_LIBS_NON_MODULES ${SDL2_LIBRARIES})
+        add_our_module(alleg-sdl2digi src/unix/sdl2digi.c ${SDL2_LIBRARIES})
+    endif(SDL2_FOUND)
+
     if(WANT_JACK)
         pkg_check_modules(JACK jack)
         if(JACK_FOUND)

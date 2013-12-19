@@ -258,6 +258,7 @@ set(ALLEGRO_SRC_LINUX_FILES
 set(ALLEGRO_SRC_UNIX_FILES
         src/unix/alsa9.c
         src/unix/alsamidi.c
+        src/unix/sdl2digi.c
         src/unix/arts.c
         src/unix/sgial.c
         src/unix/jack.c
