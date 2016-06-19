@@ -185,7 +185,9 @@ AL_ARRAY(char, osx_window_title);
 AL_VAR(int, osx_window_first_expose);
 AL_VAR(int, osx_skip_events_processing);
 AL_VAR(void *, osx_skip_events_processing_mutex);
+#ifdef ENABLE_QUICKDRAW
 AL_VAR(CGDirectPaletteRef, osx_palette);
+#endif
 AL_VAR(int, osx_palette_dirty);
 AL_VAR(int, osx_mouse_warped);
 AL_VAR(int, osx_skip_mouse_move);
