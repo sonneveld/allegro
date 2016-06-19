@@ -24,6 +24,8 @@
    #error something is wrong with the makefile
 #endif
 
+#include <OpenGL/gl.h>
+
 #define PREFIX_I "al-osxgl INFO: "
 #define PREFIX_W "al-osxgl WARNING: "
 
