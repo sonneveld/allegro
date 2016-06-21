@@ -12,8 +12,6 @@ void osx_qz_mark_dirty();
 void prepare_window_for_animation(int refresh_view);
 #endif
 
-void* osx_window_mutex;
-
 @implementation AllegroWindow
 
 #ifdef ENABLE_QUICKDRAW
@@ -72,11 +70,11 @@ void* osx_window_mutex;
  */
 - (void)windowDidDeminiaturize: (NSNotification *)aNotification
 {
-    _unix_lock_mutex(osx_window_mutex);
 #ifdef ENABLE_QUICKDRAW
+    _unix_lock_mutex(osx_window_mutex);
     osx_qz_mark_dirty();
-#endif
     _unix_unlock_mutex(osx_window_mutex);
+#endif
 }
 
 
@@ -106,6 +104,18 @@ void* osx_window_mutex;
 }
 
 @end
+
+void runOnMainQueueWithoutDeadlocking(void (^block)(void))
+{
+    if ([NSThread isMainThread])
+    {
+        block();
+    }
+    else
+    {
+        dispatch_sync(dispatch_get_main_queue(), block);
+    }
+}
 
 /* Local variables:       */
 /* c-basic-offset: 3      */
