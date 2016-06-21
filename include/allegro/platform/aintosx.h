@@ -61,7 +61,7 @@
 
 
 
-@interface AllegroAppDelegate : NSObject
+@interface AllegroAppDelegate : NSObject <NSApplicationDelegate>
 - (BOOL)application: (NSApplication *)theApplication openFile: (NSString *)filename;
 - (void)applicationDidFinishLaunching: (NSNotification *)aNotification;
 - (void)applicationDidChangeScreenParameters: (NSNotification *)aNotification;
@@ -86,15 +86,15 @@
 - (void)windowDidDeminiaturize: (NSNotification *)aNotification;
 @end
 
-
+#ifdef ENABLE_QUICKDRAW
 @interface AllegroView: NSQuickDrawView
 - (void)resetCursorRects;
 @end
+#endif
 
 @interface AllegroCocoaGLView: NSOpenGLView
 - (void)resetCursorRects;
 - (id) initWithFrame: (NSRect) frame windowed:(BOOL)windowed;
-- (BOOL)canBecomeKeyView;
 @end
 
 typedef void RETSIGTYPE;
@@ -172,6 +172,7 @@ void osx_mouse_move(int x, int y);
 HID_DEVICE_COLLECTION *osx_hid_scan(int type, HID_DEVICE_COLLECTION*);
 void osx_hid_free(HID_DEVICE_COLLECTION *);
 
+void runOnMainQueueWithoutDeadlocking(void (^block)(void));
 
 AL_VAR(NSBundle *, osx_bundle);
 AL_VAR(void *, osx_event_mutex);
