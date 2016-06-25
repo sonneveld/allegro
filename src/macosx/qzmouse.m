@@ -279,19 +279,12 @@ int osx_mouse_set_sprite(BITMAP *sprite, int x, int y)
 {
    int ix, iy;
    int sw, sh;
-   
+
    if (!sprite)
       return -1;
    sw = sprite->w;
    sh = sprite->h;
-   if (floor(NSAppKitVersionNumber) <= NSAppKitVersionNumber10_2) {
-      // Before MacOS X 10.3, NSCursor can handle only 16x16 cursor sprites
-      // Pad to 16x16 or fail if the sprite is already larger.
-      if (sw>16 || sh>16)
-         return -1;
-      sh = sw = 16;
-   }
-   
+
    // Delete the old cursor (OK to send a message to nil)
    [cursor release];
 

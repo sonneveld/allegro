@@ -152,8 +152,6 @@ void osx_qz_destroy_video_bitmap(BITMAP *bmp);
 int osx_setup_colorconv_blitter(void);
 void osx_update_dirty_lines(void);
 
-void osx_gl_render(void);
-
 uintptr_t osx_qz_write_line(BITMAP *bmp, int lyne);
 void osx_qz_unwrite_line(BITMAP *bmp);
 void osx_qz_acquire(BITMAP *bmp);
