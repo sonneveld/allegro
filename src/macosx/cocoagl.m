@@ -51,6 +51,7 @@ static void osx_gl_setup(GFX_DRIVER*);
 static void osx_gl_destroy();
 static void osx_gl_create_screen_texture(int width, int height, int color_depth);
 static void osx_gl_setup_arrays(int width, int height);
+static void osx_gl_render();
 
 static GLuint osx_screen_texture = 0;
 static int osx_screen_color_depth = 0;
@@ -405,14 +406,14 @@ static void osx_gl_setup_arrays(int width, int height)
     gl_VertexCoords[2].y = height;
     gl_TextureCoords[2].x = 0;
     gl_TextureCoords[2].y = 0;
-    
+
     gl_VertexCoords[3].x = width;
     gl_VertexCoords[3].y = height;
     gl_TextureCoords[3].x = width;
     gl_TextureCoords[3].y = 0;
 }
 
-void osx_gl_render()
+static void osx_gl_render()
 {
     if (!gfx_driver) return;
 

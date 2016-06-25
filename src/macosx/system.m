@@ -200,6 +200,10 @@ void osx_add_event_monitor() {
          if (_keyboard_installed) {
             osx_keyboard_handler(TRUE, event);
          }
+         if (! ([event modifierFlags] & NSCommandKeyMask) )
+         {
+            event = nil;
+         }
          break;
 
 
@@ -207,33 +211,40 @@ void osx_add_event_monitor() {
          if (_keyboard_installed) {
             osx_keyboard_handler(FALSE, event);
          }
+         if (! ([event modifierFlags] & NSCommandKeyMask) )
+         {
+            event = nil;
+         }
          break;
 
       case NSFlagsChanged:
          if (_keyboard_installed) {
             osx_keyboard_modifiers([event modifierFlags]);
          }
+         event = nil;
          break;
 
       case NSLeftMouseDown:
       case NSOtherMouseDown:
       case NSRightMouseDown:
+         if (![NSApp isActive]) {
             /* App is regaining focus */
-            // if (_mouse_installed) {
-            //    if ((osx_window) && (NSPointInRect(point, view))) {
-            //   mx = point.x;
-            //   my = point.y;
-            //   buttons = 0;
-            //   _mouse_on = TRUE;
-            //    }
-            // }
-            // if (osx_window)
-            //    [osx_window invalidateCursorRectsForView: [osx_window contentView]];
-            // if (_keyboard_installed)
-            //    osx_keyboard_focused(TRUE, 0);
-            // _switch_in();
-            // gotmouseevent = YES;
-            // break;
+            if (_mouse_installed) {
+               if ((osx_window) && (NSPointInRect(point, view))) {
+              mx = point.x;
+              my = point.y;
+              buttons = 0;
+              _mouse_on = TRUE;
+               }
+            }
+            if (osx_window)
+               [osx_window invalidateCursorRectsForView: [osx_window contentView]];
+            if (_keyboard_installed)
+               osx_keyboard_focused(TRUE, 0);
+            _switch_in();
+            gotmouseevent = YES;
+            break;
+         }
          /* fallthrough */
       case NSLeftMouseUp:
       case NSOtherMouseUp:
@@ -284,7 +295,7 @@ void osx_add_event_monitor() {
          break;
 
       case NSMouseEntered:
-         if (([event trackingNumber] == osx_mouse_tracking_rect)) {
+         if (([event trackingNumber] == osx_mouse_tracking_rect) && ([NSApp isActive])) {
             if (_mouse_installed) {
                mx = point.x;
                my = point.y;
