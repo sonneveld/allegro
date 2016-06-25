@@ -26,8 +26,6 @@
 
 #ifndef SCAN_DEPEND
 #include <CoreFoundation/CoreFoundation.h>
-#include <mach/mach_port.h>
-#include <servers/bootstrap.h>
 #endif
 
 
