@@ -201,47 +201,56 @@ static BITMAP *osx_gl_real_init(int w, int h, int v_w, int v_h, int color_depth,
 
     osx_gl_context = [[osx_gl_view openGLContext] retain];
 
-    /* Print out OpenGL version info */
-    TRACE(PREFIX_I "OpenGL Version: %s\n",
-          (AL_CONST char*)glGetString(GL_VERSION));
-    TRACE(PREFIX_I "Vendor: %s\n",
-          (AL_CONST char*)glGetString(GL_VENDOR));
-    TRACE(PREFIX_I "Renderer: %s\n",
-          (AL_CONST char*)glGetString(GL_RENDERER));
+    CGLLockContext([osx_gl_context CGLContextObj]);
+    @try {
+        [osx_gl_context makeCurrentContext];
+        
+        /* Print out OpenGL version info */
+        TRACE(PREFIX_I "OpenGL Version: %s\n",
+              (AL_CONST char*)glGetString(GL_VERSION));
+        TRACE(PREFIX_I "Vendor: %s\n",
+              (AL_CONST char*)glGetString(GL_VENDOR));
+        TRACE(PREFIX_I "Renderer: %s\n",
+              (AL_CONST char*)glGetString(GL_RENDERER));
 
-    // enable vsync
-    GLint swapInt = 1;
-    [osx_gl_context setValues:&swapInt forParameter:NSOpenGLCPSwapInterval];
+        // enable vsync
+        GLint swapInt = 1;
+        [osx_gl_context setValues:&swapInt forParameter:NSOpenGLCPSwapInterval];
+
+        osx_gl_setup(driver);
+
+        [osx_gl_context flushBuffer];
+
+        if (!is_fullscreen) {
+            osx_mouse_tracking_rect = [osx_gl_view addTrackingRect: rect
+                                                             owner: NSApp
+                                                          userData: nil
+                                                      assumeInside: YES];
+        }
+
+        CVDisplayLinkCreateWithActiveCGDisplays(&displayLink);
+
+        CVDisplayLinkSetOutputCallback(displayLink, &display_link_render_callback, nil);
+
+        CGLContextObj cglContext = [osx_gl_context CGLContextObj];
+        CGLPixelFormatObj cglPixelFormat = [[osx_gl_view pixelFormat] CGLPixelFormatObj];
+        CVDisplayLinkSetCurrentCGDisplayFromOpenGLContext(displayLink, cglContext, cglPixelFormat);
+
+        CVDisplayLinkStart(displayLink);
+
+        [NSOpenGLContext clearCurrentContext];
+    } @finally {
+        CGLUnlockContext([osx_gl_context CGLContextObj]);
+    }
+
+    });
 
     osx_keyboard_focused(FALSE, 0);
     clear_keybuf();
 
-    osx_gl_setup(driver);
-
-    [osx_gl_context flushBuffer];
-
-    if (!is_fullscreen) {
-        osx_mouse_tracking_rect = [osx_gl_view addTrackingRect: rect
-                                                         owner: NSApp
-                                                      userData: nil
-                                                  assumeInside: YES];
-    }
-
-    CVDisplayLinkCreateWithActiveCGDisplays(&displayLink);
-
-    CVDisplayLinkSetOutputCallback(displayLink, &display_link_render_callback, nil);
-
-    CGLContextObj cglContext = [osx_gl_context CGLContextObj];
-    CGLPixelFormatObj cglPixelFormat = [[osx_gl_view pixelFormat] CGLPixelFormatObj];
-    CVDisplayLinkSetCurrentCGDisplayFromOpenGLContext(displayLink, cglContext, cglPixelFormat);
-
-    CVDisplayLinkStart(displayLink);
-
-    });
-
-    osx_gfx_mode = OSX_GFX_GL;
     osx_skip_mouse_move = TRUE;
     osx_window_first_expose = TRUE;
+    osx_gfx_mode = OSX_GFX_GL;
 
     return displayed_video_bitmap;
 }
@@ -272,19 +281,32 @@ static void osx_gl_window_exit(BITMAP *bmp)
         CVDisplayLinkRelease(displayLink);
         displayLink = nil;
 
-        osx_gl_destroy();
+        CGLLockContext([osx_gl_context CGLContextObj]);
+        @try {
+            [osx_gl_context makeCurrentContext];
 
-        [osx_gl_context release];
-        osx_gl_context = nil;
+            osx_gl_destroy();
 
-        [osx_gl_view release];
-        osx_gl_view = nil;
+            [osx_gl_context release];
+            osx_gl_context = nil;
 
-        [osx_window close];
-        osx_window = nil;
+            [osx_gl_view release];
+            osx_gl_view = nil;
+
+            [osx_window close];
+            osx_window = nil;
+            [NSOpenGLContext clearCurrentContext];
+        } @finally {
+            CGLUnlockContext([osx_gl_context CGLContextObj]);
+        }
     }
-//    destroy_bitmap(displayed_video_bitmap);
-    displayed_video_bitmap = NULL;
+
+    if (displayed_video_bitmap) {
+        // No need to destroy because graphics.c:_set_gfx_mode will do it.
+        // destroy_bitmap(displayed_video_bitmap);
+        displayed_video_bitmap = NULL;
+    }
+
     osx_gfx_mode = OSX_GFX_NONE;
 
     });
@@ -416,11 +438,13 @@ static void osx_gl_setup_arrays(int width, int height)
 static void osx_gl_render()
 {
     if (!gfx_driver) return;
-
     if (gfx_driver->id != GFX_COCOAGL_WINDOW && gfx_driver->id != GFX_COCOAGL_FULLSCREEN) return;
+    if (!osx_gl_context) { return; }
 
-    if (osx_gl_context) {
+    CGLLockContext([osx_gl_context CGLContextObj]);
+    @try {
         [osx_gl_context makeCurrentContext];
+
         glTexSubImage2D(GL_TEXTURE_RECTANGLE_EXT, 0,
                         0, 0, gfx_driver->w, gfx_driver->h,
                         osx_texture_format, osx_texture_storage, displayed_video_bitmap->line[0]);
@@ -430,7 +454,10 @@ static void osx_gl_render()
 
         glFinish();
         [osx_gl_context flushBuffer];
+
         [NSOpenGLContext clearCurrentContext];
+    } @finally {
+        CGLUnlockContext([osx_gl_context CGLContextObj]);
     }
 }
 
