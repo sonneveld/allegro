@@ -29,6 +29,8 @@
 #define PREFIX_I "al-osxgl INFO: "
 #define PREFIX_W "al-osxgl WARNING: "
 
+@class AllegroCocoaGLView;
+
 static BITMAP *osx_gl_window_init(int, int, int, int, int);
 static void osx_gl_window_exit(BITMAP *);
 
@@ -36,29 +38,6 @@ static BITMAP *osx_gl_full_init(int, int, int, int, int);
 static void osx_gl_full_exit(BITMAP *);
 
 static void gfx_cocoa_enable_acceleration(GFX_VTABLE *vtable);
-
-
-// private bitmap that is actually rendered to
-static BITMAP *displayed_video_bitmap;
-
-//other vars
-static AllegroWindowDelegate *osx_window_delegate = NULL;
-static AllegroCocoaGLView *osx_gl_view = NULL;
-static NSOpenGLContext *osx_gl_context;
-
-static NSOpenGLPixelFormat *init_pixel_format(int windowed);
-static void osx_gl_setup(GFX_DRIVER*);
-static void osx_gl_destroy();
-static void osx_gl_create_screen_texture(int width, int height, int color_depth);
-static void osx_gl_setup_arrays(int width, int height);
-static void osx_gl_render();
-
-static GLuint osx_screen_texture = 0;
-static int osx_screen_color_depth = 0;
-static GLuint osx_texture_format = GL_RGBA;
-static GLenum osx_texture_storage = GL_UNSIGNED_BYTE;
-
-static CVDisplayLinkRef displayLink;
 
 GFX_DRIVER gfx_cocoagl_window =
 {
@@ -137,11 +116,6 @@ GFX_DRIVER gfx_cocoagl_full =
 };
 
 
-static CVReturn display_link_render_callback(CVDisplayLinkRef displayLink, const CVTimeStamp* now, const CVTimeStamp* outputTime, CVOptionFlags flagsIn, CVOptionFlags* flagsOut, void* displayLinkContext)
-{
-    osx_gl_render();
-    return kCVReturnSuccess;
-}
 
 static BITMAP *osx_gl_real_init(int w, int h, int v_w, int v_h, int color_depth, GFX_DRIVER * driver)
 {
@@ -152,8 +126,7 @@ static BITMAP *osx_gl_real_init(int w, int h, int v_w, int v_h, int color_depth,
     if (color_depth != 32 && color_depth != 16)
         ustrzcpy(allegro_error, ALLEGRO_ERROR_SIZE, get_config_text("Unsupported color depth"));
 
-    displayed_video_bitmap = create_bitmap_ex(color_depth, w, h);
-    osx_screen_color_depth = color_depth;
+    BITMAP *displayed_video_bitmap = create_bitmap_ex(color_depth, w, h);
 
     driver->w = w;
     driver->h = h;
@@ -166,11 +139,11 @@ static BITMAP *osx_gl_real_init(int w, int h, int v_w, int v_h, int color_depth,
 
     // setup REAL window
     NSRect rect = NSMakeRect(0, 0, w, h);
-    NSUInteger styleMask = NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask;
-    if (is_fullscreen) {
-        rect = [[NSScreen mainScreen] frame];
-        styleMask = NSBorderlessWindowMask;
-    }
+    NSUInteger styleMask = NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask | NSResizableWindowMask;
+    //if (is_fullscreen) {
+      //  rect = [[NSScreen mainScreen] frame];
+      //  styleMask = NSBorderlessWindowMask;
+    //}
 
     osx_window = [[AllegroWindow alloc] initWithContentRect: rect
                                                   styleMask: styleMask
@@ -178,70 +151,27 @@ static BITMAP *osx_gl_real_init(int w, int h, int v_w, int v_h, int color_depth,
                                                       defer: NO
                                                      screen:[NSScreen mainScreen]];
 
-    osx_window_delegate = [[AllegroWindowDelegate alloc] init] ;
+    AllegroWindowDelegate *osx_window_delegate = [[AllegroWindowDelegate alloc] init];
     [osx_window setDelegate: (id<NSWindowDelegate>)osx_window_delegate];
     [osx_window setOneShot: YES];
     [osx_window setAcceptsMouseMovedEvents: YES];
     [osx_window setViewsNeedDisplay: NO];
+    [osx_window setCollectionBehavior:NSWindowCollectionBehaviorFullScreenPrimary];
+
+    [osx_window center];
     if (is_fullscreen) {
-        [osx_window setLevel:NSMainMenuWindowLevel+1];
-        // [osx_window setLevel:CGShieldingWindowLevel()];
-        [osx_window setOpaque:YES];
-        [osx_window setHidesOnDeactivate:YES];
-    } else {
-        [osx_window center];
+        [osx_window  toggleFullScreen:nil];
+//        [osx_window setLevel:NSMainMenuWindowLevel+1];
+//        [osx_window setOpaque:YES];
+//        [osx_window setHidesOnDeactivate:YES];
     }
 
     set_window_title(osx_window_title);
 
-    osx_gl_view = [[AllegroCocoaGLView alloc] initWithFrame: rect windowed:driver->windowed];
+    AllegroCocoaGLView *osx_gl_view = [[[AllegroCocoaGLView alloc] initWithFrame: rect windowed:driver->windowed backing: displayed_video_bitmap] autorelease];
     [osx_window setContentView: osx_gl_view];
 
     [osx_window makeKeyAndOrderFront: nil];
-
-    osx_gl_context = [[osx_gl_view openGLContext] retain];
-
-    CGLLockContext([osx_gl_context CGLContextObj]);
-    @try {
-        [osx_gl_context makeCurrentContext];
-        
-        /* Print out OpenGL version info */
-        TRACE(PREFIX_I "OpenGL Version: %s\n",
-              (AL_CONST char*)glGetString(GL_VERSION));
-        TRACE(PREFIX_I "Vendor: %s\n",
-              (AL_CONST char*)glGetString(GL_VENDOR));
-        TRACE(PREFIX_I "Renderer: %s\n",
-              (AL_CONST char*)glGetString(GL_RENDERER));
-
-        // enable vsync
-        GLint swapInt = 1;
-        [osx_gl_context setValues:&swapInt forParameter:NSOpenGLCPSwapInterval];
-
-        osx_gl_setup(driver);
-
-        [osx_gl_context flushBuffer];
-
-        if (!is_fullscreen) {
-            osx_mouse_tracking_rect = [osx_gl_view addTrackingRect: rect
-                                                             owner: NSApp
-                                                          userData: nil
-                                                      assumeInside: YES];
-        }
-
-        CVDisplayLinkCreateWithActiveCGDisplays(&displayLink);
-
-        CVDisplayLinkSetOutputCallback(displayLink, &display_link_render_callback, nil);
-
-        CGLContextObj cglContext = [osx_gl_context CGLContextObj];
-        CGLPixelFormatObj cglPixelFormat = [[osx_gl_view pixelFormat] CGLPixelFormatObj];
-        CVDisplayLinkSetCurrentCGDisplayFromOpenGLContext(displayLink, cglContext, cglPixelFormat);
-
-        CVDisplayLinkStart(displayLink);
-
-        [NSOpenGLContext clearCurrentContext];
-    } @finally {
-        CGLUnlockContext([osx_gl_context CGLContextObj]);
-    }
 
     });
 
@@ -276,40 +206,15 @@ static BITMAP *osx_gl_full_init(int w, int h, int v_w, int v_h, int color_depth)
 static void osx_gl_window_exit(BITMAP *bmp)
 {
     runOnMainQueueWithoutDeadlocking(^{
-
-    if (osx_window) {
-        CVDisplayLinkRelease(displayLink);
-        displayLink = nil;
-
-        CGLLockContext([osx_gl_context CGLContextObj]);
-        @try {
-            [osx_gl_context makeCurrentContext];
-
-            osx_gl_destroy();
-
-            [osx_gl_context release];
-            osx_gl_context = nil;
-
-            [osx_gl_view release];
-            osx_gl_view = nil;
-
+        if (osx_window) {
+            [[osx_window contentView] stopRendering];
+            
             [osx_window close];
             osx_window = nil;
-            [NSOpenGLContext clearCurrentContext];
-        } @finally {
-            CGLUnlockContext([osx_gl_context CGLContextObj]);
         }
-    }
-
-    if (displayed_video_bitmap) {
-        // No need to destroy because graphics.c:_set_gfx_mode will do it.
-        // destroy_bitmap(displayed_video_bitmap);
-        displayed_video_bitmap = NULL;
-    }
+    });
 
     osx_gfx_mode = OSX_GFX_NONE;
-
-    });
 }
 
 
@@ -327,139 +232,6 @@ static void gfx_cocoa_enable_acceleration(GFX_VTABLE *vtable)
     gfx_capabilities |= (GFX_HW_VRAM_BLIT | GFX_HW_MEM_BLIT);
 }
 
-struct MyVertex {
-    GLfloat x;
-    GLfloat y;
-};
-static struct MyVertex gl_VertexCoords[4];
-static struct MyVertex gl_TextureCoords[4];
-
-static void osx_gl_setup(GFX_DRIVER * driver)
-{
-    glEnable(GL_CULL_FACE);
-    glEnable(GL_TEXTURE_RECTANGLE_ARB);
-   // glEnable(GL_TEXTURE_2D);
-   // glDisable(GL_DEPTH_TEST);
-   // glDisable(GL_LIGHTING);
-   // glDisable(GL_BLEND);
-   // glDisable(GL_SCISSOR_TEST);
-    glShadeModel(GL_FLAT);
-
-    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-
-    glViewport(0, 0, driver->w, driver->h);
-    glScissor(0, 0, driver->w, driver->h);
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINES);
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-    glVertexPointer(2, GL_FLOAT, sizeof(struct MyVertex), (const GLvoid*)&gl_VertexCoords[0]);
-    glTexCoordPointer(2, GL_FLOAT, sizeof(struct MyVertex), (const GLvoid*)&gl_TextureCoords[0]);
-
-   glActiveTexture(GL_TEXTURE0);
-
-    osx_gl_create_screen_texture(driver->w, driver->h, osx_screen_color_depth);
-    osx_gl_setup_arrays(driver->w, driver->h);
-
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-
-    glOrtho(0, driver->w - 1, 0, driver->h - 1, 0, 1);
-
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-}
-
-static void osx_gl_destroy()
-{
-    if (osx_screen_texture != 0)
-    {
-        glDeleteTextures(1, &osx_screen_texture);
-        osx_screen_texture = 0;
-    }
-}
-
-static void osx_gl_create_screen_texture(int width, int height, int color_depth)
-{
-    if (osx_screen_texture != 0)
-    {
-        glDeleteTextures(1, &osx_screen_texture);
-        osx_screen_texture = 0;
-    }
-
-    switch (color_depth) {
-        case 16:
-            osx_texture_format = GL_RGB;
-            osx_texture_storage = GL_UNSIGNED_SHORT_5_6_5;
-            break;
-        case 32:
-            osx_texture_format = GL_RGBA;
-            osx_texture_storage = GL_UNSIGNED_BYTE;
-            break;
-        default:
-            TRACE(PREFIX_I "unsupported color depth\n");
-            return;
-    }
-
-    glGenTextures(1, &osx_screen_texture);
-    glBindTexture(GL_TEXTURE_RECTANGLE_ARB, osx_screen_texture);
-    glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, GL_RGB, width, height, 0, osx_texture_format, osx_texture_storage, NULL);
-}
-
-static void osx_gl_setup_arrays(int width, int height)
-{
-    gl_VertexCoords[0].x = 0;
-    gl_VertexCoords[0].y = 0;
-    gl_TextureCoords[0].x = 0;
-    gl_TextureCoords[0].y = height;
-
-    gl_VertexCoords[1].x = width;
-    gl_VertexCoords[1].y = 0;
-    gl_TextureCoords[1].x = width;
-    gl_TextureCoords[1].y = height;
-
-    gl_VertexCoords[2].x = 0;
-    gl_VertexCoords[2].y = height;
-    gl_TextureCoords[2].x = 0;
-    gl_TextureCoords[2].y = 0;
-
-    gl_VertexCoords[3].x = width;
-    gl_VertexCoords[3].y = height;
-    gl_TextureCoords[3].x = width;
-    gl_TextureCoords[3].y = 0;
-}
-
-static void osx_gl_render()
-{
-    if (!gfx_driver) return;
-    if (gfx_driver->id != GFX_COCOAGL_WINDOW && gfx_driver->id != GFX_COCOAGL_FULLSCREEN) return;
-    if (!osx_gl_context) { return; }
-
-    CGLLockContext([osx_gl_context CGLContextObj]);
-    @try {
-        [osx_gl_context makeCurrentContext];
-
-        glTexSubImage2D(GL_TEXTURE_RECTANGLE_EXT, 0,
-                        0, 0, gfx_driver->w, gfx_driver->h,
-                        osx_texture_format, osx_texture_storage, displayed_video_bitmap->line[0]);
-
-        glClear(GL_COLOR_BUFFER_BIT);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-        glFinish();
-        [osx_gl_context flushBuffer];
-
-        [NSOpenGLContext clearCurrentContext];
-    } @finally {
-        CGLUnlockContext([osx_gl_context CGLContextObj]);
-    }
-}
 
 /* NSOpenGLPixelFormat *init_pixel_format(int windowed)
  *
@@ -479,16 +251,50 @@ static NSOpenGLPixelFormat *init_pixel_format(int windowed)
     *attrib++ = NSOpenGLPFAColorSize;
     *attrib++ = 16;
 
-   if (!windowed) {
-      *attrib++ = NSOpenGLPFAScreenMask;
-      *attrib++ = CGDisplayIDToOpenGLDisplayMask(kCGDirectMainDisplay);
-   }
+//   if (!windowed) {
+//      *attrib++ = NSOpenGLPFAScreenMask;
+//      *attrib++ = CGDisplayIDToOpenGLDisplayMask(kCGDirectMainDisplay);
+//   }
    *attrib = 0;
 
    NSOpenGLPixelFormat *pf = [[NSOpenGLPixelFormat alloc] initWithAttributes: attribs];
 
    return pf;
 }
+
+static CVReturn display_link_render_callback(CVDisplayLinkRef displayLink, const CVTimeStamp* now, const CVTimeStamp* outputTime, CVOptionFlags flagsIn, CVOptionFlags* flagsOut, void* displayLinkContext)
+{
+    @autoreleasepool {
+        [((AllegroCocoaGLView *)displayLinkContext) render];
+    }
+    return kCVReturnSuccess;
+}
+
+struct MyVertex {
+    GLfloat x;
+    GLfloat y;
+};
+
+@interface AllegroCocoaGLView: NSOpenGLView {
+
+    BITMAP *_displayed_video_bitmap;
+
+    int _gameWidth;
+    int _gameHeight;
+    int _colourDepth;
+
+    GLuint _osx_screen_texture;
+    int _osx_screen_color_depth;
+    GLuint _osx_texture_format;
+    GLenum _osx_texture_storage;
+
+    CVDisplayLinkRef _displayLink;
+
+    struct MyVertex _gl_VertexCoords[4];
+    struct MyVertex _gl_TextureCoords[4];
+}
+
+@end
 
 @implementation AllegroCocoaGLView
 
@@ -502,8 +308,13 @@ static NSOpenGLPixelFormat *init_pixel_format(int windowed)
 }
 
 /* Custom view: when created, select a suitable pixel format */
-- (id) initWithFrame: (NSRect) frame windowed:(BOOL)windowed
+- (id) initWithFrame: (NSRect) frame windowed:(BOOL)windowed backing: (BITMAP *) bmp
 {
+    _displayed_video_bitmap = bmp;
+    _gameWidth = bmp->w;
+    _gameHeight = bmp->h;
+    _colourDepth = bmp->vtable->color_depth;
+
    NSOpenGLPixelFormat* pf = init_pixel_format(windowed);
    if (pf) {
         self = [super initWithFrame:frame pixelFormat: pf];
@@ -514,7 +325,250 @@ static NSOpenGLPixelFormat *init_pixel_format(int windowed)
    {
         TRACE(PREFIX_W "Unable to find suitable pixel format\n");
    }
+
    return nil;
+}
+
+- (void)renewGState
+{   
+    // Called whenever graphics state updated (such as window resize)
+    
+    // OpenGL rendering is not synchronous with other rendering on the OSX.
+    // Therefore, call disableScreenUpdatesUntilFlush so the window server
+    // doesn't render non-OpenGL content in the window asynchronously from
+    // OpenGL content, which could cause flickering.  (non-OpenGL content
+    // includes the title bar and drawing done by the app with other APIs)
+    [[self window] disableScreenUpdatesUntilFlush];
+
+    [super renewGState];
+}
+
+- (void)stopRendering
+{
+    CVDisplayLinkStop(_displayLink);
+
+    CVDisplayLinkRelease(_displayLink);
+    _displayLink = nil;
+    
+    CGLLockContext([[self openGLContext] CGLContextObj]);
+    @try {
+        [[self openGLContext] makeCurrentContext];
+        
+        _displayed_video_bitmap = nil;
+        
+        [self delete_osx_screen_texture];
+        
+        [NSOpenGLContext clearCurrentContext];
+    } @finally {
+        CGLUnlockContext([[self openGLContext] CGLContextObj]);
+    }
+
+    if (osx_mouse_tracking_rect != -1) {
+      [self removeTrackingRect: osx_mouse_tracking_rect];
+    }
+}
+
+- (void)dealloc
+{
+    [self stopRendering];
+
+    [super dealloc];
+
+}
+
+- (void)delete_osx_screen_texture
+{
+    if (_osx_screen_texture != 0)
+    {
+        glDeleteTextures(1, &_osx_screen_texture);
+        _osx_screen_texture = 0;
+    }  
+}
+
+- (void) prepareOpenGL 
+{
+    [super prepareOpenGL];
+    
+    /* Print out OpenGL version info */
+    TRACE(PREFIX_I "OpenGL Version: %s\n", (AL_CONST char*)glGetString(GL_VERSION));
+    TRACE(PREFIX_I "Vendor: %s\n", (AL_CONST char*)glGetString(GL_VENDOR));
+    TRACE(PREFIX_I "Renderer: %s\n", (AL_CONST char*)glGetString(GL_RENDERER));
+
+    // enable vsync
+    GLint swapInt = 1;
+    [[self openGLContext] setValues:&swapInt forParameter:NSOpenGLCPSwapInterval];
+
+    [self osx_gl_setup];
+
+    [[self openGLContext] flushBuffer];
+
+    CVDisplayLinkCreateWithActiveCGDisplays(&_displayLink);
+
+    CVDisplayLinkSetOutputCallback(_displayLink, &display_link_render_callback, self);
+
+    // Select the display link most optimal for the current renderer of an OpenGL context
+    CGLContextObj cglContext = [[self openGLContext] CGLContextObj];
+    CGLPixelFormatObj cglPixelFormat = [[self pixelFormat] CGLPixelFormatObj];
+    CVDisplayLinkSetCurrentCGDisplayFromOpenGLContext(_displayLink, cglContext, cglPixelFormat);
+
+    CVDisplayLinkStart(_displayLink);
+}
+
+- (void) osx_gl_setup
+{
+    [self osx_gl_setup_arrays];
+
+    glDisable(GL_DITHER);
+    glDisable(GL_ALPHA_TEST);
+    glDisable(GL_BLEND);
+    glDisable(GL_STENCIL_TEST);
+    glDisable(GL_FOG);
+    glDisable(GL_TEXTURE_2D);
+    glDisable(GL_DEPTH_TEST);
+    glPixelZoom(1.0,1.0);
+
+    glShadeModel(GL_FLAT);
+    glEnable(GL_TEXTURE_RECTANGLE_ARB);
+
+    [self reshape];
+
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINES);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    glVertexPointer(2, GL_FLOAT, sizeof(struct MyVertex), (const GLvoid*)&_gl_VertexCoords[0]);
+    glTexCoordPointer(2, GL_FLOAT, sizeof(struct MyVertex), (const GLvoid*)&_gl_TextureCoords[0]);
+
+    glActiveTexture(GL_TEXTURE0);
+    [self osx_gl_create_screen_texture];
+}
+
+- (void) osx_gl_create_screen_texture
+{
+    [self delete_osx_screen_texture];
+
+    switch (_colourDepth) {
+        case 16:
+            _osx_texture_format = GL_RGB;
+            _osx_texture_storage = GL_UNSIGNED_SHORT_5_6_5;
+            break;
+        case 32:
+            _osx_texture_format = GL_RGBA;
+            _osx_texture_storage = GL_UNSIGNED_BYTE;
+            break;
+        default:
+            TRACE(PREFIX_I "unsupported color depth\n");
+            return;
+    }
+
+    glGenTextures(1, &_osx_screen_texture);
+    glBindTexture(GL_TEXTURE_RECTANGLE_ARB, _osx_screen_texture);
+    glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, GL_RGB, _gameWidth, _gameHeight, 0, _osx_texture_format, _osx_texture_storage, NULL);
+}
+
+- (void) osx_gl_setup_arrays
+{
+    _gl_VertexCoords[0].x = 0;
+    _gl_VertexCoords[0].y = 0;
+    _gl_TextureCoords[0].x = 0;
+    _gl_TextureCoords[0].y = _gameHeight;
+
+    _gl_VertexCoords[1].x = _gameWidth;
+    _gl_VertexCoords[1].y = 0;
+    _gl_TextureCoords[1].x = _gameWidth;
+    _gl_TextureCoords[1].y = _gameHeight;
+
+    _gl_VertexCoords[2].x = 0;
+    _gl_VertexCoords[2].y = _gameHeight;
+    _gl_TextureCoords[2].x = 0;
+    _gl_TextureCoords[2].y = 0;
+
+    _gl_VertexCoords[3].x = _gameWidth;
+    _gl_VertexCoords[3].y = _gameHeight;
+    _gl_TextureCoords[3].x = _gameWidth;
+    _gl_TextureCoords[3].y = 0;
+}
+
+- (void) drawRect: (NSRect) theRect
+{
+    [self render];
+}
+
+
+- (void) render
+{
+    [[self openGLContext] makeCurrentContext];
+    
+    CGLLockContext([[self openGLContext] CGLContextObj]);
+    @try {
+ 
+        if (!_displayed_video_bitmap) { return; }
+        
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        glTexSubImage2D(GL_TEXTURE_RECTANGLE_EXT, 0,
+                        0, 0, _gameWidth, _gameHeight,
+                        _osx_texture_format, _osx_texture_storage, _displayed_video_bitmap->line[0]);
+
+        glClear(GL_COLOR_BUFFER_BIT);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+        CGLFlushDrawable([[self openGLContext] CGLContextObj]);
+    } @finally {
+        CGLUnlockContext([[self openGLContext] CGLContextObj]);
+    }
+}
+
+
+- (void) reshape
+{
+    [super reshape];
+
+    if (osx_mouse_tracking_rect != -1) {
+      [self removeTrackingRect: osx_mouse_tracking_rect];
+    }
+
+    osx_mouse_tracking_rect = [self addTrackingRect: self.frame
+                                                     owner: NSApp
+                                                  userData: nil
+                                              assumeInside: YES];
+
+    CGLLockContext([[self openGLContext] CGLContextObj]);
+    @try {
+        [[self openGLContext] makeCurrentContext];
+
+        NSSize myNSWindowSize = [ self frame ].size;
+
+        float aspect = ((float)_gameHeight) /  _gameWidth;
+
+        /* if 320x200 or 640x400 - non square pixels */
+        if ( (_gameWidth == 320) && (_gameHeight == 200) ||
+            (_gameWidth == 640) && (_gameHeight == 400) ) {
+            aspect = 1.333333333333;
+        }
+
+        
+        NSRect viewport = NSMakeRect((myNSWindowSize.width - myNSWindowSize.height * aspect)/2, 0, myNSWindowSize.height * aspect, myNSWindowSize.height);
+        glViewport(viewport.origin.x, viewport.origin.y, viewport.size.width, viewport.size.height);
+        glScissor(viewport.origin.x, viewport.origin.y, viewport.size.width, viewport.size.height);
+        
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0, _gameWidth - 1, 0, _gameHeight - 1, 0, 1);
+
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    } @finally {
+        CGLUnlockContext([[self openGLContext] CGLContextObj]);
+    }
+
 }
 
 @end
