@@ -92,10 +92,9 @@
 @end
 #endif
 
-@interface AllegroCocoaGLView: NSOpenGLView
-- (void)resetCursorRects;
-- (id) initWithFrame: (NSRect) frame windowed:(BOOL)windowed;
-@end
+// @interface AllegroCocoaGLView: NSOpenGLView
+// - (id) initWithFrame: (NSRect) frame windowed:(BOOL)windowed;
+// @end
 
 typedef void RETSIGTYPE;
 
