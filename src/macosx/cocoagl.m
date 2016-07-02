@@ -543,7 +543,7 @@ struct MyVertex {
 
         NSSize myNSWindowSize = [ self frame ].size;
 
-        float aspect = ((float)_gameHeight) /  _gameWidth;
+        float aspect = ((float)_gameWidth) / _gameHeight;
 
         /* if 320x200 or 640x400 - non square pixels */
         if ( (_gameWidth == 320) && (_gameHeight == 200) ||
@@ -551,7 +551,6 @@ struct MyVertex {
             aspect = 1.333333333333;
         }
 
-        
         NSRect viewport = NSMakeRect((myNSWindowSize.width - myNSWindowSize.height * aspect)/2, 0, myNSWindowSize.height * aspect, myNSWindowSize.height);
         glViewport(viewport.origin.x, viewport.origin.y, viewport.size.width, viewport.size.height);
         glScissor(viewport.origin.x, viewport.origin.y, viewport.size.width, viewport.size.height);
