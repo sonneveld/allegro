@@ -21,6 +21,8 @@
  *      Peter Wang added support for packfile vtables.
  *
  *      See readme.txt for copyright information.
+ *
+ * ****** CJ CHANGES IN THIS FILE: Renamed pack_fopen to __old_pack_fopen
  */
 
 

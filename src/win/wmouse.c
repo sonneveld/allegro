@@ -82,7 +82,7 @@ HCURSOR _win_hcursor = NULL;	/* Hardware cursor to display */
 #define DINPUT_BUFFERSIZE 256
 static HANDLE mouse_input_event = NULL;
 static LPDIRECTINPUT mouse_dinput = NULL;
-static LPDIRECTINPUTDEVICE mouse_dinput_device = NULL;
+LPDIRECTINPUTDEVICE mouse_dinput_device = NULL;
 
 static int dinput_buttons = 0;
 static int dinput_wheel = FALSE;
