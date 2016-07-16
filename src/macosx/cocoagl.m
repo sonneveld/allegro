@@ -116,6 +116,33 @@ GFX_DRIVER gfx_cocoagl_full =
 };
 
 
+static NSRect make_display_rect(int w, int h) 
+{
+    float display_aspect = ((float)w) / h;
+
+    /* if 320x200 or 640x400 - non square pixels */
+    if ( ((w == 320) && (h == 200)) ||
+        ((w == 640) && (h == 400)) ) {
+        display_aspect = 4.0/3.0;
+    }
+
+    int display_w = w;
+    int display_h = w / display_aspect;
+
+    NSRect screenRect = [[NSScreen mainScreen] visibleFrame];
+    int w_scale = screenRect.size.width / display_w;
+    int h_scale = screenRect.size.height / display_h;
+    int scale = w_scale;
+    if (h_scale < scale) { scale = h_scale; }
+    if (scale < 1) { scale = 1; }
+
+    display_w = display_w * scale;
+    display_h = display_h * scale;
+
+    NSRect rect = NSMakeRect(0, 0, display_w, display_h);
+
+    return rect;
+}
 
 static BITMAP *osx_gl_real_init(int w, int h, int v_w, int v_h, int color_depth, GFX_DRIVER * driver)
 {
@@ -138,7 +165,7 @@ static BITMAP *osx_gl_real_init(int w, int h, int v_w, int v_h, int color_depth,
     runOnMainQueueWithoutDeadlocking(^{
 
     // setup REAL window
-    NSRect rect = NSMakeRect(0, 0, w, h);
+    NSRect rect = make_display_rect (w, h);
     NSUInteger styleMask = NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask | NSResizableWindowMask;
     //if (is_fullscreen) {
       //  rect = [[NSScreen mainScreen] frame];
@@ -546,9 +573,9 @@ struct MyVertex {
         float aspect = ((float)_gameWidth) / _gameHeight;
 
         /* if 320x200 or 640x400 - non square pixels */
-        if ( (_gameWidth == 320) && (_gameHeight == 200) ||
-            (_gameWidth == 640) && (_gameHeight == 400) ) {
-            aspect = 1.333333333333;
+        if ( ((_gameWidth == 320) && (_gameHeight == 200)) ||
+            ((_gameWidth == 640) && (_gameHeight == 400)) ) {
+            aspect = 4.0/3.0;
         }
 
         NSRect viewport = NSMakeRect((myNSWindowSize.width - myNSWindowSize.height * aspect)/2, 0, myNSWindowSize.height * aspect, myNSWindowSize.height);
