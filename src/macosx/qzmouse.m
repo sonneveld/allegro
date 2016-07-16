@@ -110,6 +110,10 @@ void osx_mouse_handler(int ax, int ay, int x, int y, int z, int buttons)
          [osx_cursor set];
       }
       current_cursor = osx_cursor;
+   } else {
+      if (![[NSCursor currentSystemCursor] isEqual: osx_cursor]) {
+         [osx_cursor set];
+      } 
    }
 
    if (osx_mouse_warped) {
