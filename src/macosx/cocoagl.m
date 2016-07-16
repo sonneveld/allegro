@@ -184,6 +184,7 @@ static BITMAP *osx_gl_real_init(int w, int h, int v_w, int v_h, int color_depth,
     [osx_window setAcceptsMouseMovedEvents: YES];
     [osx_window setViewsNeedDisplay: NO];
     [osx_window setCollectionBehavior:NSWindowCollectionBehaviorFullScreenPrimary];
+    [osx_window setContentAspectRatio:rect.size];
 
     [osx_window center];
     if (is_fullscreen) {
