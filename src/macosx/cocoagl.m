@@ -579,7 +579,13 @@ struct MyVertex {
             aspect = 4.0/3.0;
         }
 
-        NSRect viewport = NSMakeRect((myNSWindowSize.width - myNSWindowSize.height * aspect)/2, 0, myNSWindowSize.height * aspect, myNSWindowSize.height);
+        NSRect viewport;
+        viewport.size = NSMakeSize(myNSWindowSize.height * aspect, myNSWindowSize.height);
+        if (viewport.size.width > myNSWindowSize.width) {
+            viewport.size = NSMakeSize(myNSWindowSize.width, myNSWindowSize.width/aspect);
+        }
+        viewport.origin = NSMakePoint((myNSWindowSize.width - viewport.size.width)/2, (myNSWindowSize.height - viewport.size.height)/2 );
+
         glViewport(viewport.origin.x, viewport.origin.y, viewport.size.width, viewport.size.height);
         glScissor(viewport.origin.x, viewport.origin.y, viewport.size.width, viewport.size.height);
         
