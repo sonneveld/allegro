@@ -25,6 +25,7 @@
 #endif
 
 #include <OpenGL/gl.h>
+#include <math.h>
 
 #define PREFIX_I "al-osxgl INFO: "
 #define PREFIX_W "al-osxgl WARNING: "
@@ -116,18 +117,28 @@ GFX_DRIVER gfx_cocoagl_full =
 };
 
 
-static NSRect make_display_rect(int w, int h) 
-{
-    float display_aspect = ((float)w) / h;
+static float calc_aspect_ratio(NSSize size) {
+    float display_aspect = ((float)size.width) / size.height;
 
     /* if 320x200 or 640x400 - non square pixels */
-    if ( ((w == 320) && (h == 200)) ||
-        ((w == 640) && (h == 400)) ) {
+    if ( ((size.width == 320) && (size.height == 200)) ||
+        ((size.width == 640) && (size.height == 400)) ) {
         display_aspect = 4.0/3.0;
     }
 
-    int display_w = w;
-    int display_h = w / display_aspect;
+    return display_aspect;
+}
+
+static NSSize adjust_display_size(NSSize size) 
+{
+    const float display_aspect = calc_aspect_ratio(size);
+    return NSMakeSize (ceil(size.width), ceil(size.width / display_aspect));
+}
+
+static NSSize scale_display_size(NSSize size) 
+{
+    int display_w = size.width;
+    int display_h = size.height;
 
     NSRect screenRect = [[NSScreen mainScreen] visibleFrame];
     int w_scale = screenRect.size.width / display_w;
@@ -139,9 +150,7 @@ static NSRect make_display_rect(int w, int h)
     display_w = display_w * scale;
     display_h = display_h * scale;
 
-    NSRect rect = NSMakeRect(0, 0, display_w, display_h);
-
-    return rect;
+    return NSMakeSize (display_w, display_h);
 }
 
 static BITMAP *osx_gl_real_init(int w, int h, int v_w, int v_h, int color_depth, GFX_DRIVER * driver)
@@ -164,15 +173,18 @@ static BITMAP *osx_gl_real_init(int w, int h, int v_w, int v_h, int color_depth,
     // Run on the main thread because we're manipulating the API
     runOnMainQueueWithoutDeadlocking(^{
 
+    const NSSize suggestedSize = NSMakeSize(w, h);
+    const NSSize adjustedSize = adjust_display_size(suggestedSize);
+    const NSSize scaledSize = scale_display_size(adjustedSize);
+
     // setup REAL window
-    NSRect rect = make_display_rect (w, h);
     NSUInteger styleMask = NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask | NSResizableWindowMask;
     //if (is_fullscreen) {
       //  rect = [[NSScreen mainScreen] frame];
       //  styleMask = NSBorderlessWindowMask;
     //}
 
-    osx_window = [[AllegroWindow alloc] initWithContentRect: rect
+    osx_window = [[AllegroWindow alloc] initWithContentRect: (NSRect){.origin=NSZeroPoint, .size=scaledSize}
                                                   styleMask: styleMask
                                                     backing: NSBackingStoreBuffered
                                                       defer: NO
@@ -184,9 +196,8 @@ static BITMAP *osx_gl_real_init(int w, int h, int v_w, int v_h, int color_depth,
     [osx_window setAcceptsMouseMovedEvents: YES];
     [osx_window setViewsNeedDisplay: NO];
     [osx_window setCollectionBehavior:NSWindowCollectionBehaviorFullScreenPrimary];
-    [osx_window setContentAspectRatio:rect.size];
-
     [osx_window center];
+
     if (is_fullscreen) {
         [osx_window  toggleFullScreen:nil];
 //        [osx_window setLevel:NSMainMenuWindowLevel+1];
@@ -196,8 +207,11 @@ static BITMAP *osx_gl_real_init(int w, int h, int v_w, int v_h, int color_depth,
 
     set_window_title(osx_window_title);
 
-    AllegroCocoaGLView *osx_gl_view = [[[AllegroCocoaGLView alloc] initWithFrame: rect windowed:driver->windowed backing: displayed_video_bitmap] autorelease];
+    AllegroCocoaGLView *osx_gl_view = [[[AllegroCocoaGLView alloc] initWithFrame: (NSRect){.origin=NSZeroPoint, .size=scaledSize} windowed:driver->windowed backing: displayed_video_bitmap] autorelease];
     [osx_window setContentView: osx_gl_view];
+
+    [osx_window setContentMinSize: adjustedSize];
+    [osx_window setContentAspectRatio: adjustedSize];
 
     [osx_window makeKeyAndOrderFront: nil];
 
@@ -330,8 +344,7 @@ struct MyVertex {
 - (void)resetCursorRects
 {
     [super resetCursorRects];
-    [self addCursorRect: [self visibleRect]
-                 cursor: osx_cursor];
+    [self addCursorRect: [self visibleRect] cursor: osx_cursor];
     [osx_cursor setOnMouseEntered: YES];
 }
 
@@ -571,13 +584,7 @@ struct MyVertex {
 
         NSSize myNSWindowSize = [ self frame ].size;
 
-        float aspect = ((float)_gameWidth) / _gameHeight;
-
-        /* if 320x200 or 640x400 - non square pixels */
-        if ( ((_gameWidth == 320) && (_gameHeight == 200)) ||
-            ((_gameWidth == 640) && (_gameHeight == 400)) ) {
-            aspect = 4.0/3.0;
-        }
+        float aspect = calc_aspect_ratio(NSMakeSize(_gameWidth, _gameHeight));
 
         NSRect viewport;
         viewport.size = NSMakeSize(myNSWindowSize.height * aspect, myNSWindowSize.height);
