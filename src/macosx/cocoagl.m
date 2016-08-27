@@ -120,11 +120,13 @@ GFX_DRIVER gfx_cocoagl_full =
 static float calc_aspect_ratio(NSSize size) {
     float display_aspect = ((float)size.width) / size.height;
 
+#ifdef ALLEGRO_MACOSX_ALLOW_NON_SQUARE_PIXELS    
     /* if 320x200 or 640x400 - non square pixels */
     if ( ((size.width == 320) && (size.height == 200)) ||
         ((size.width == 640) && (size.height == 400)) ) {
         display_aspect = 4.0/3.0;
     }
+#endif
 
     return display_aspect;
 }
