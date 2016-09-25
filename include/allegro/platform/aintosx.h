@@ -84,6 +84,10 @@
 @interface AllegroWindowDelegate : NSObject
 - (BOOL)windowShouldClose: (id)sender;
 - (void)windowDidDeminiaturize: (NSNotification *)aNotification;
+- (void)windowDidBecomeKey:(NSNotification *)notification;
+- (void)windowDidResignKey:(NSNotification *)notification;
+- (void)windowWillEnterFullScreen:(NSNotification *)notification;
+- (void)windowWillExitFullScreen:(NSNotification *)notification;
 @end
 
 #ifdef ENABLE_QUICKDRAW
