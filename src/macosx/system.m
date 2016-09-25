@@ -145,7 +145,7 @@ static RETSIGTYPE osx_signal_handler(int num)
 }
 
 
-inline static void osx_scale_mouse(NSPointPointer position, const NSRectPointer window, const NSRectPointer view)
+static void osx_scale_mouse(NSPointPointer position, const NSRectPointer window, const NSRectPointer view)
 {
     // flip the vertical to top down
     position->y = window->size.height - position->y;
@@ -155,6 +155,28 @@ inline static void osx_scale_mouse(NSPointPointer position, const NSRectPointer 
     }
 }
 
+static NSPoint locationInView (NSEvent *event, NSView *inTermsOfView) {
+   NSPoint windowLocation;
+
+   NSWindow *eventWindow = [event window];
+   NSWindow *viewWindow = [inTermsOfView window];
+
+   if (eventWindow) {
+      if (eventWindow == viewWindow) {
+         windowLocation = [event locationInWindow];
+      } else {
+         // event from a completely different window.. convert to global and back to _our_ window
+         NSPoint globalLocation = [eventWindow convertBaseToScreen: windowLocation];
+         windowLocation = [viewWindow convertScreenToBase: globalLocation];
+      }
+   } else {
+      // if window is nil, then it's assumed to be screen coordinates.
+      NSPoint globalLocation = [event locationInWindow];
+      windowLocation = [viewWindow convertScreenToBase: globalLocation ];
+   }
+
+   return [inTermsOfView convertPoint: windowLocation fromView: nil];
+}
 
 void osx_add_event_monitor() {
 
@@ -179,16 +201,14 @@ void osx_add_event_monitor() {
    }
 
    view = NSMakeRect(0, 0, gfx_driver->w, gfx_driver->h);
-   point = [event locationInWindow];
-   if (osx_window)
-   {
-      frame = [[osx_window contentView] frame];
-   }
-   else
-   {
-       frame = [[NSScreen mainScreen] frame];
-   }
 
+   point = NSMakePoint(0, 0);
+   if (osx_window) {
+      frame = [[osx_window contentView] frame];
+      point = locationInView (event, [osx_window contentView]);
+   } else {
+      frame = [[NSScreen mainScreen] frame];
+   }
    osx_scale_mouse(&point, &frame, &view);
 
    event_type = [event type];
