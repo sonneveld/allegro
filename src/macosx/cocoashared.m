@@ -12,6 +12,8 @@ void osx_qz_mark_dirty();
 void prepare_window_for_animation(int refresh_view);
 #endif
 
+extern void _hack_stop_keyboard_repeat();
+
 @implementation AllegroWindow
 
 #ifdef ENABLE_QUICKDRAW
@@ -91,7 +93,6 @@ void prepare_window_for_animation(int refresh_view);
 }
 
 
-
 /* windowDidResignKey:
  * Sent by the default notification center immediately after an NSWindow
  * object has resigned its status as key window.
@@ -101,6 +102,19 @@ void prepare_window_for_animation(int refresh_view);
     _unix_lock_mutex(osx_skip_events_processing_mutex);
     osx_skip_events_processing = TRUE;
     _unix_unlock_mutex(osx_skip_events_processing_mutex);
+
+    // Stop repeating keys since we might not actually see the "key up" event.
+    _hack_stop_keyboard_repeat();
+}
+
+- (void)windowWillEnterFullScreen:(NSNotification *)notification
+{
+    _hack_stop_keyboard_repeat();
+}
+
+- (void)windowWillExitFullScreen:(NSNotification *)notification
+{
+    _hack_stop_keyboard_repeat();
 }
 
 @end

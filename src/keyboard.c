@@ -396,6 +396,16 @@ END_OF_STATIC_FUNCTION(repeat_timer);
 
 
 
+void _hack_stop_keyboard_repeat()
+{
+   if (repeat_key >= 0) {
+      remove_int(repeat_timer);
+      repeat_key = -1;
+      repeat_scan = -1;
+   }
+}
+
+
 /* install_keyboard_hooks:
  *  You should only use this function if you *aren't* using the rest of the
  *  keyboard handler. It can be called in the place of install_keyboard(),
