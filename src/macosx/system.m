@@ -180,6 +180,8 @@ static NSPoint locationInView (NSEvent *event, NSView *inTermsOfView) {
 
 void osx_add_event_monitor() {
 
+   __block BOOL cursor_hidden = NO;  // need to keep track because nscursor requires balanced hide/unhide
+
    [NSEvent addLocalMonitorForEventsMatchingMask:NSAnyEventMask handler:^NSEvent * (NSEvent *event) {
 
    NSDate *distant_past = [NSDate distantPast];
@@ -255,8 +257,6 @@ void osx_add_event_monitor() {
               _mouse_on = TRUE;
                }
             }
-            if (osx_window)
-               [osx_window invalidateCursorRectsForView: [osx_window contentView]];
             if (_keyboard_installed)
                osx_keyboard_focused(TRUE, 0);
             _switch_in();
@@ -315,6 +315,13 @@ void osx_add_event_monitor() {
       case NSMouseEntered:
          if (([event trackingNumber] == osx_mouse_tracking_rect) && ([NSApp isActive])) {
             if (_mouse_installed) {
+
+               // hide the cursor because sometimes osx will reshow cursor for no reason
+               if (!cursor_hidden) {
+                  [NSCursor hide];
+                  cursor_hidden = YES;
+               }
+
                mx = point.x;
                my = point.y;
                buttons = 0;
@@ -327,6 +334,12 @@ void osx_add_event_monitor() {
       case NSMouseExited:
          if ([event trackingNumber] == osx_mouse_tracking_rect) {
             if (_mouse_installed) {
+
+               if (cursor_hidden) {
+                  [NSCursor unhide];
+                  cursor_hidden = NO;
+               }
+
                _mouse_on = FALSE;
                gotmouseevent = YES;
             }
