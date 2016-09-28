@@ -665,25 +665,20 @@ if(ALLEGRO_MACOSX)
     endif(NOT SHARED)
 
     find_library(COCOA_LIBRARY Cocoa)
-    find_library(CARBON_LIBRARY Carbon)
     find_library(IOKIT_LIBRARY IOKit)
     find_library(COREAUDIO_LIBRARY CoreAudio)
     find_library(AUDIOUNIT_LIBRARY AudioUnit)
     find_library(AUDIOTOOLBOX_LIBRARY AudioToolbox)
     find_library(OPENGL_LIBRARY OpenGL)
-    find_package(QuickTime)
-    mark_as_advanced(COCOA_LIBRARY CARBON_LIBRARY IOKIT_LIBRARY OPENGL_LIBRARY)
+    mark_as_advanced(COCOA_LIBRARY IOKIT_LIBRARY OPENGL_LIBRARY)
     mark_as_advanced(COREAUDIO_LIBRARY AUDIOUNIT_LIBRARY AUDIOTOOLBOX_LIBRARY)
-    mark_as_advanced(QUICKTIME_INCLUDE_DIR QUICKTIME_LIBRARY)
 
     list(APPEND PLATFORM_LIBS
 	${COCOA_LIBRARY}
-	${CARBON_LIBRARY}
 	${IOKIT_LIBRARY}
 	${COREAUDIO_LIBRARY}
 	${AUDIOUNIT_LIBRARY}
 	${AUDIOTOOLBOX_LIBRARY}
-	${QUICKTIME_LIBRARY}
 	${OPENGL_LIBRARY}
 	)
 endif(ALLEGRO_MACOSX)
@@ -904,7 +899,7 @@ if(UNIX) # including MACOSX
         if(BUILD_SHARED_LIBS)
             set(FRAMEWORKS "-framework Cocoa -framework Allegro -lalleg-main${BUILD_TYPE_SUFFIX}")
         else(BUILD_SHARED_LIBS)
-            set(FRAMEWORKS "-framework Cocoa -framework Allegro -lalleg-main${BUILD_TYPE_SUFFIX} -framework Carbon -framework IOKit -framework System -framework CoreAudio -framework AudioUnit -framework AudioToolbox -framework QuickTime")
+            set(FRAMEWORKS "-framework Cocoa -framework Allegro -lalleg-main${BUILD_TYPE_SUFFIX} -framework IOKit -framework System -framework CoreAudio -framework AudioUnit -framework AudioToolbox")
         endif(BUILD_SHARED_LIBS)
     else()
         set(ACCEPT_FRAMEWORKS no)

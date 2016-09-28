@@ -42,7 +42,6 @@
       #import <CoreAudio/CoreAudio.h>
       #import <AudioUnit/AudioUnit.h>
       #import <AudioToolbox/AudioToolbox.h>
-      #import <QuickTime/QuickTime.h>
       #import <IOKit/IOKitLib.h>
       #import <IOKit/IOCFPlugIn.h>
       #import <IOKit/hid/IOHIDLib.h>
@@ -107,9 +106,7 @@ AL_VAR(DIGI_DRIVER, digi_sound_manager);
 
 /* MIDI music drivers */
 #define MIDI_CORE_AUDIO         AL_ID('M','C','A',' ')
-#define MIDI_QUICKTIME          AL_ID('Q','T','M',' ')
 AL_VAR(MIDI_DRIVER, midi_core_audio);
-AL_VAR(MIDI_DRIVER, midi_quicktime);
 
 /* Joystick drivers */
 #define JOYSTICK_HID            AL_ID('H','I','D','J')
