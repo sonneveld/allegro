@@ -193,6 +193,7 @@ void osx_add_event_monitor() {
    static int buttons = 0;
    int event_type;
    BOOL gotmouseevent = NO;
+   static int alt_left_mouse_up_event = -1;
 
    _unix_lock_mutex(osx_skip_events_processing_mutex);
    int skip_events_processing = osx_skip_events_processing;
@@ -251,10 +252,11 @@ void osx_add_event_monitor() {
             /* App is regaining focus */
             if (_mouse_installed) {
                if ((osx_window) && (NSPointInRect(point, view))) {
-              mx = point.x;
-              my = point.y;
-              buttons = 0;
-              _mouse_on = TRUE;
+                  mx = point.x;
+                  my = point.y;
+                  buttons = 0;
+                  alt_left_mouse_up_event = -1;
+                  _mouse_on = TRUE;
                }
             }
             if (_keyboard_installed)
@@ -267,31 +269,39 @@ void osx_add_event_monitor() {
       case NSLeftMouseUp:
       case NSOtherMouseUp:
       case NSRightMouseUp:
-         if (osx_emulate_mouse_buttons) {
-            if (event_type == NSLeftMouseDown) {
-               if ((!osx_window) || (NSPointInRect(point, view))) {
-                  buttons = 0x1;
-                  if (key[KEY_ALT])
-                     buttons = 0x4;
-                  if (key[KEY_LCONTROL])
-                     buttons = 0x2;
+         {
+            int mouse_event_type = event_type;
+
+            if (mouse_event_type == NSLeftMouseDown) {
+               if (osx_emulate_mouse_buttons) {
+                  if (key[KEY_ALT]) {
+                     mouse_event_type = NSOtherMouseDown;
+                     alt_left_mouse_up_event = NSOtherMouseUp;
+                  }
+                  if (key[KEY_LCONTROL]) {
+                     mouse_event_type = NSRightMouseDown;
+                     alt_left_mouse_up_event = NSRightMouseUp;
+                  }
                }
             }
-            else if (event_type == NSLeftMouseUp)
-               buttons &= ~0x7;
-         }
-         else {
+
+            if ((mouse_event_type == NSLeftMouseUp) && (alt_left_mouse_up_event >= 0)) {
+               mouse_event_type = alt_left_mouse_up_event;
+               alt_left_mouse_up_event = -1;
+            }
+
             if ((!osx_window) || (NSPointInRect(point, view))) {
                /* Deliver mouse downs only if cursor is on the window */
-               buttons |= ((event_type == NSLeftMouseDown) ? 0x1 : 0);
-               buttons |= ((event_type == NSRightMouseDown) ? 0x2 : 0);
-               buttons |= ((event_type == NSOtherMouseDown) ? 0x4 : 0);
+               buttons |= ((mouse_event_type == NSLeftMouseDown) ? 0x1 : 0);
+               buttons |= ((mouse_event_type == NSRightMouseDown) ? 0x2 : 0);
+               buttons |= ((mouse_event_type == NSOtherMouseDown) ? 0x4 : 0);
             }
-            buttons &= ~((event_type == NSLeftMouseUp) ? 0x1 : 0);
-            buttons &= ~((event_type == NSRightMouseUp) ? 0x2 : 0);
-            buttons &= ~((event_type == NSOtherMouseUp) ? 0x4 : 0);
+            buttons &= ~((mouse_event_type == NSLeftMouseUp) ? 0x1 : 0);
+            buttons &= ~((mouse_event_type == NSRightMouseUp) ? 0x2 : 0);
+            buttons &= ~((mouse_event_type == NSOtherMouseUp) ? 0x4 : 0);
+
+            gotmouseevent = YES;
          }
-         gotmouseevent = YES;
          break;
 
       case NSLeftMouseDragged:
