@@ -158,39 +158,97 @@ static void osx_scale_mouse(NSPointPointer position, const NSRectPointer window,
 static NSPoint locationInView (NSEvent *event, NSView *inTermsOfView) {
    NSPoint windowLocation;
 
-   NSWindow *eventWindow = [event window];
    NSWindow *viewWindow = [inTermsOfView window];
 
-   if (eventWindow) {
-      if (eventWindow == viewWindow) {
-         windowLocation = [event locationInWindow];
+   if (event) {
+      NSWindow *eventWindow = [event window];
+
+      if (eventWindow) {
+         if (eventWindow == viewWindow) {
+            windowLocation = [event locationInWindow];
+         } else {
+            // event from a completely different window.. convert to global and back to _our_ window
+            NSPoint globalLocation = [eventWindow convertBaseToScreen: windowLocation];
+            windowLocation = [viewWindow convertScreenToBase: globalLocation];
+         }
       } else {
-         // event from a completely different window.. convert to global and back to _our_ window
-         NSPoint globalLocation = [eventWindow convertBaseToScreen: windowLocation];
-         windowLocation = [viewWindow convertScreenToBase: globalLocation];
-      }
+         // if window is nil, then it's assumed to be screen coordinates.
+         NSPoint globalLocation = [event locationInWindow];
+         windowLocation = [viewWindow convertScreenToBase: globalLocation ];
+      }  
    } else {
-      // if window is nil, then it's assumed to be screen coordinates.
-      NSPoint globalLocation = [event locationInWindow];
+      NSPoint globalLocation = [NSEvent mouseLocation];
       windowLocation = [viewWindow convertScreenToBase: globalLocation ];
    }
 
    return [inTermsOfView convertPoint: windowLocation fromView: nil];
 }
 
-void osx_add_event_monitor() {
 
-   __block BOOL cursor_hidden = NO;  // need to keep track because nscursor requires balanced hide/unhide
+static BOOL cursor_hidden = NO;  // need to keep track because nscursor requires balanced hide/unhide
+static int dx = 0, dy = 0, dz = 0;
+static int mx=0;
+static int my=0;
+static int buttons = 0;
+
+void osx_mouse_available() 
+{
+   if (!_mouse_installed) { return; }
+
+   NSPoint point;
+   NSRect frame, view;
+   view = NSMakeRect(0, 0, gfx_driver->w, gfx_driver->h);
+
+   point = NSMakePoint(0, 0);
+   if (osx_window) {
+      frame = [[osx_window contentView] frame];
+      point = locationInView (nil, [osx_window contentView]);
+   } else {
+      frame = [[NSScreen mainScreen] frame];
+   }
+   osx_scale_mouse(&point, &frame, &view);
+
+   if (NSPointInRect(point, view)) {
+
+      // hide the cursor because sometimes osx will reshow cursor for no reason
+      if (!cursor_hidden) {
+         [NSCursor hide];
+         cursor_hidden = YES;
+      }
+
+      mx = point.x;
+      my = point.y;
+      buttons = 0;
+      _mouse_on = TRUE;
+
+      osx_mouse_handler(mx, my, dx, dy, dz, buttons);
+   }
+}
+
+void osx_mouse_not_available()
+{
+   if (!_mouse_installed) { return; }
+
+   if (cursor_hidden) {
+      [NSCursor unhide];
+      cursor_hidden = NO;
+   }
+
+   _mouse_on = FALSE;
+
+   osx_mouse_handler(mx, my, dx, dy, dz, buttons);
+}
+
+void osx_add_event_monitor() {
 
    [NSEvent addLocalMonitorForEventsMatchingMask:NSAnyEventMask handler:^NSEvent * (NSEvent *event) {
 
    NSDate *distant_past = [NSDate distantPast];
    NSPoint point;
    NSRect frame, view;
-   int dx = 0, dy = 0, dz = 0;
-   int mx=_mouse_x;
-   int my=_mouse_y;
-   static int buttons = 0;
+   dx = 0, dy = 0, dz = 0;
+   mx=_mouse_x;
+   my=_mouse_y;
    int event_type;
    BOOL gotmouseevent = NO;
    static int alt_left_mouse_up_event = -1;
@@ -273,6 +331,7 @@ void osx_add_event_monitor() {
             int mouse_event_type = event_type;
 
             if (mouse_event_type == NSLeftMouseDown) {
+               //  TODO: if mouse down but hasn't clearned alt-mouse.. keep with the alt.
                if (osx_emulate_mouse_buttons) {
                   if (key[KEY_ALT]) {
                      mouse_event_type = NSOtherMouseDown;
@@ -324,38 +383,17 @@ void osx_add_event_monitor() {
 
       case NSMouseEntered:
          if (([event trackingNumber] == osx_mouse_tracking_rect) && ([NSApp isActive])) {
-            if (_mouse_installed) {
-
-               // hide the cursor because sometimes osx will reshow cursor for no reason
-               if (!cursor_hidden) {
-                  [NSCursor hide];
-                  cursor_hidden = YES;
-               }
-
-               mx = point.x;
-               my = point.y;
-               buttons = 0;
-               _mouse_on = TRUE;
-               gotmouseevent = YES;
-            }
+            osx_mouse_available();
+            return event;  // return immediately since osx_mouse_available will call handler.
          }
          break;
 
       case NSMouseExited:
          if ([event trackingNumber] == osx_mouse_tracking_rect) {
-            if (_mouse_installed) {
-
-               if (cursor_hidden) {
-                  [NSCursor unhide];
-                  cursor_hidden = NO;
-               }
-
-               _mouse_on = FALSE;
-               gotmouseevent = YES;
-            }
+            osx_mouse_not_available();
+            return event;  // return immediately since osx_mouse_available will call handler.
          }
          break;
-
 
       default:
          break;

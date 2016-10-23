@@ -13,6 +13,8 @@ void prepare_window_for_animation(int refresh_view);
 #endif
 
 extern void _hack_stop_keyboard_repeat();
+extern void osx_mouse_available();
+extern void osx_mouse_not_available();
 
 @implementation AllegroWindow
 
@@ -79,7 +81,17 @@ extern void _hack_stop_keyboard_repeat();
 #endif
 }
 
+// We call osx_mouse_* here because we sometimes don't detect mouse entering window area if alt-tabbing from another context
 
+- (void)windowDidBecomeMain:(NSNotification *)notification
+{
+    osx_mouse_available();
+}
+
+- (void)windowDidResignMain:(NSNotification *)notification
+{
+    osx_mouse_not_available();
+}
 
 /* windowDidBecomeKey:
  * Sent by the default notification center immediately after an NSWindow

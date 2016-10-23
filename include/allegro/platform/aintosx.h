@@ -88,6 +88,8 @@
 - (void)windowDidResignKey:(NSNotification *)notification;
 - (void)windowWillEnterFullScreen:(NSNotification *)notification;
 - (void)windowWillExitFullScreen:(NSNotification *)notification;
+- (void)windowDidBecomeMain:(NSNotification *)notification;
+- (void)windowDidResignMain:(NSNotification *)notification;
 @end
 
 #ifdef ENABLE_QUICKDRAW
