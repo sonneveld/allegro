@@ -191,9 +191,9 @@ static int mx=0;
 static int my=0;
 static int buttons = 0;
 
-void osx_mouse_available() 
-{
+void update_cursor() {
    if (!_mouse_installed) { return; }
+   if (!_mouse_on) { return; }
 
    NSPoint point;
    NSRect frame, view;
@@ -214,12 +214,39 @@ void osx_mouse_available()
       if (!cursor_hidden) {
          [NSCursor hide];
          cursor_hidden = YES;
+      } else {
+         // if dock is shown, having the mouse near the edge might show the cursor, so unhide/hide
+         [NSCursor unhide];
+         [NSCursor hide];
       }
+      }
+}
+
+void osx_mouse_available() 
+{
+   if (!_mouse_installed) { return; }
+
+   NSPoint point;
+   NSRect frame, view;
+   view = NSMakeRect(0, 0, gfx_driver->w, gfx_driver->h);
+
+   point = NSMakePoint(0, 0);
+   if (osx_window) {
+      frame = [[osx_window contentView] frame];
+      point = locationInView (nil, [osx_window contentView]);
+   } else {
+      frame = [[NSScreen mainScreen] frame];
+   }
+   osx_scale_mouse(&point, &frame, &view);
+
+   if (NSPointInRect(point, view)) {
 
       mx = point.x;
       my = point.y;
       buttons = 0;
       _mouse_on = TRUE;
+
+      update_cursor();
 
       osx_mouse_handler(mx, my, dx, dy, dz, buttons);
    }
@@ -367,6 +394,10 @@ void osx_add_event_monitor() {
       case NSRightMouseDragged:
       case NSOtherMouseDragged:
       case NSMouseMoved:
+
+         // a bit dodgy but hide mouse cursor 
+         update_cursor();
+
          dx += [event deltaX];
          dy += [event deltaY];
 

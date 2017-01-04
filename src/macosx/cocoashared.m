@@ -52,6 +52,7 @@ extern void osx_mouse_not_available();
 
 @end
 
+static int _isFullScreen = 0;
 
 @implementation AllegroWindowDelegate
 
@@ -85,12 +86,13 @@ extern void osx_mouse_not_available();
 
 - (void)windowDidBecomeMain:(NSNotification *)notification
 {
-    osx_mouse_available();
+    if (_isFullScreen) {
+        [[NSApplication sharedApplication] setPresentationOptions:NSApplicationPresentationAutoHideMenuBar | NSApplicationPresentationHideDock];
+    }
 }
 
 - (void)windowDidResignMain:(NSNotification *)notification
 {
-    osx_mouse_not_available();
 }
 
 /* windowDidBecomeKey:
@@ -99,11 +101,15 @@ extern void osx_mouse_not_available();
  */
 - (void)windowDidBecomeKey:(NSNotification *)notification
 {
+    if (_isFullScreen) {
+        [[NSApplication sharedApplication] setPresentationOptions:NSApplicationPresentationAutoHideMenuBar | NSApplicationPresentationHideDock];
+    }
     _unix_lock_mutex(osx_skip_events_processing_mutex);
     osx_skip_events_processing = FALSE;
     _unix_unlock_mutex(osx_skip_events_processing_mutex);
-}
 
+    osx_mouse_available();
+}
 
 /* windowDidResignKey:
  * Sent by the default notification center immediately after an NSWindow
@@ -115,18 +121,32 @@ extern void osx_mouse_not_available();
     osx_skip_events_processing = TRUE;
     _unix_unlock_mutex(osx_skip_events_processing_mutex);
 
+    osx_mouse_not_available();
+
     // Stop repeating keys since we might not actually see the "key up" event.
     _hack_stop_keyboard_repeat();
 }
 
 - (void)windowWillEnterFullScreen:(NSNotification *)notification
 {
+    [[NSApplication sharedApplication] setPresentationOptions:NSApplicationPresentationAutoHideMenuBar | NSApplicationPresentationHideDock];
     _hack_stop_keyboard_repeat();
 }
 
 - (void)windowWillExitFullScreen:(NSNotification *)notification
 {
+    [[NSApplication sharedApplication] setPresentationOptions:NSApplicationPresentationDefault];
     _hack_stop_keyboard_repeat();
+}
+
+- (void)windowDidEnterFullScreen:(NSNotification *)notification
+{
+    _isFullScreen = 1;
+}
+
+- (void)windowDidExitFullScreen:(NSNotification *)notification
+{
+    _isFullScreen = 0;
 }
 
 @end

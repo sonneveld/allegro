@@ -348,6 +348,16 @@ struct MyVertex {
     [super resetCursorRects];
     [self addCursorRect: [self visibleRect] cursor: osx_cursor];
     [osx_cursor setOnMouseEntered: YES];
+
+    if (osx_mouse_tracking_rect != -1) {
+      [self removeTrackingRect: osx_mouse_tracking_rect];
+    }
+
+    osx_mouse_tracking_rect = [self addTrackingRect: [self visibleRect]
+                                                     owner: NSApp
+                                                  userData: nil
+                                              assumeInside: YES];
+
 }
 
 /* Custom view: when created, select a suitable pixel format */
@@ -570,15 +580,6 @@ struct MyVertex {
 - (void) reshape
 {
     [super reshape];
-
-    if (osx_mouse_tracking_rect != -1) {
-      [self removeTrackingRect: osx_mouse_tracking_rect];
-    }
-
-    osx_mouse_tracking_rect = [self addTrackingRect: self.frame
-                                                     owner: NSApp
-                                                  userData: nil
-                                              assumeInside: YES];
 
     CGLLockContext([[self openGLContext] CGLContextObj]);
     @try {
