@@ -194,18 +194,8 @@ static BITMAP *osx_gl_real_init(int w, int h, int v_w, int v_h, int color_depth,
 
     AllegroWindowDelegate *osx_window_delegate = [[AllegroWindowDelegate alloc] init];
     [osx_window setDelegate: (id<NSWindowDelegate>)osx_window_delegate];
-    [osx_window setOneShot: YES];
-    [osx_window setAcceptsMouseMovedEvents: YES];
-    [osx_window setViewsNeedDisplay: NO];
     [osx_window setCollectionBehavior:NSWindowCollectionBehaviorFullScreenPrimary];
     [osx_window center];
-
-    if (is_fullscreen) {
-        [osx_window  toggleFullScreen:nil];
-//        [osx_window setLevel:NSMainMenuWindowLevel+1];
-//        [osx_window setOpaque:YES];
-//        [osx_window setHidesOnDeactivate:YES];
-    }
 
     set_window_title(osx_window_title);
 
@@ -215,9 +205,20 @@ static BITMAP *osx_gl_real_init(int w, int h, int v_w, int v_h, int color_depth,
     [osx_window setContentMinSize: adjustedSize];
     [osx_window setContentAspectRatio: adjustedSize];
 
+    [osx_window setLevel: NSNormalWindowLevel];
+    [osx_window orderFrontRegardless];
     [osx_window makeKeyAndOrderFront: nil];
 
     });
+
+    // NS: this must be toggled after window and view has been completely configured. If not, the dock may interact
+    // with the mouse cursor in weird ways, showing the system cursor if you hover where the dock would appear.
+    // The use of 'dispatch_after' might not be necessary, but I wanted to let the runloop iterate a few times.
+    if (is_fullscreen) {
+      dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(50 * NSEC_PER_MSEC)), dispatch_get_main_queue(), ^{
+        [osx_window toggleFullScreen:nil];
+      });
+    }
 
     osx_keyboard_focused(FALSE, 0);
     clear_keybuf();
