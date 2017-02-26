@@ -40,12 +40,12 @@
 static HANDLE key_input_event = NULL;
 static HANDLE key_input_processed_event = NULL;
 static LPDIRECTINPUT key_dinput = NULL;
-static LPDIRECTINPUTDEVICE key_dinput_device = NULL;
+LPDIRECTINPUTDEVICE key_dinput_device = NULL;
 
 
 /* lookup table for converting DIK_* scancodes into Allegro KEY_* codes */
 /* this table was from pckeys.c  */
-static const unsigned char hw_to_mycode[256] = {
+const unsigned char hw_to_mycode[256] = {
    /* 0x00 */ 0, KEY_ESC, KEY_1, KEY_2,
    /* 0x04 */ KEY_3, KEY_4, KEY_5, KEY_6,
    /* 0x08 */ KEY_7, KEY_8, KEY_9, KEY_0,

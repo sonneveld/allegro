@@ -151,7 +151,7 @@ static DIGI_DRIVER digi_directsound =
 
 
 /* sound driver globals */
-static LPDIRECTSOUND directsound = NULL;
+LPDIRECTSOUND directsound = NULL;
 static LPDIRECTSOUNDBUFFER prim_buf = NULL;
 static long int initial_volume;
 static int _freq, _bits, _stereo;
