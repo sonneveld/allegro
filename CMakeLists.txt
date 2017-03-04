@@ -223,6 +223,9 @@ endif(UNIX)
 #
 
 option(STRICT_WARN "Halt at warnings" off)
+if(MSVC)
+    option(MSVC_SHARED_CRT "Link to c-runtime dynamically" on)
+endif(MSVC)
 
 set(INSTALL_PREFIX "")
 
@@ -267,6 +270,21 @@ if(MSVC)
     set(COMPILER_MSVC 1)
     set(ALLEGRO_MSVC 1)
     set(WFLAGS "/W3 -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE")
+endif(MSVC)
+
+if(MSVC)
+    if(MSVC_SHARED_CRT)
+    else(MSVC_SHARED_CRT)
+        foreach(flag_var
+                CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE
+                CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO
+                CMAKE_C_FLAGS CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_RELEASE
+                CMAKE_C_FLAGS_MINSIZEREL CMAKE_C_FLAGS_RELWITHDEBINFO)
+            if(${flag_var} MATCHES "/MD")
+                string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
+           endif(${flag_var} MATCHES "/MD")
+        endforeach(flag_var)
+    endif(MSVC_SHARED_CRT)
 endif(MSVC)
 
 if(WIN32)
