@@ -809,12 +809,25 @@ if(WIN32)
     else(SHARED)
         # Add a -static postfix on the main library for Windows.
         # In earlier versions of Allegro this was "_s".
-        set_target_properties(allegro
-            PROPERTIES
-            POSTFIX "-static"
-            DEBUG_POSTFIX "-debug-static"
-            PROFILE_POSTFIX "-profile-static"
-            )
+        if(MSVC AND NOT MSVC_SHARED_CRT)
+            set_target_properties(allegro
+                PROPERTIES
+                RELEASE_POSTFIX "-static-mt"
+                MINSIZEREL_POSTFIX "-static-mt"
+                RELWITHDEBINFO_POSTFIX "-static-mt"
+                DEBUG_POSTFIX "-debug-static-mt"
+                PROFILE_POSTFIX "-profile-static-mt"
+                )
+        else()
+            set_target_properties(allegro
+                PROPERTIES
+                RELEASE_POSTFIX "-static"
+                MINSIZEREL_POSTFIX "-static"
+                RELWITHDEBINFO_POSTFIX "-static"
+                DEBUG_POSTFIX "-debug-static"
+                PROFILE_POSTFIX "-profile-static"
+                )
+        endif()
     endif(SHARED)
 endif(WIN32)
 
