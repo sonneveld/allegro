@@ -78,8 +78,7 @@
 #define INLINE       __inline
 
 #define LONG_LONG    __int64
-/* TODO: find out the minimal MSC_VER to define ALLEGRO_HAVE_STDINT_H */
-#if (_MSC_VER >= 1900)
+#if (_MSC_VER >= 1600)
    #define ALLEGRO_HAVE_STDINT_H
 #else
    #define int64_t      signed __int64
