@@ -21,8 +21,6 @@
  *      Peter Wang added support for packfile vtables.
  *
  *      See readme.txt for copyright information.
- *
- * ****** CJ CHANGES IN THIS FILE: Renamed pack_fopen to __old_pack_fopen
  */
 
 
@@ -1810,7 +1808,7 @@ PACKFILE *_pack_fdopen(int fd, AL_CONST char *mode)
  *  it returns NULL and stores an error code in errno. An attempt to read a 
  *  normal file in packed mode will cause errno to be set to EDOM.
  */
-PACKFILE *__old_pack_fopen(AL_CONST char *filename, AL_CONST char *mode)
+PACKFILE *pack_fopen(AL_CONST char *filename, AL_CONST char *mode)
 {
    char tmp[1024];
    int fd;
