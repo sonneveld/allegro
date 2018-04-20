@@ -63,6 +63,9 @@ _DRIVER_INFO _system_driver_list[] =
 #ifdef ALLEGRO_MACOSX
    {  SYSTEM_MACOSX,    &system_macosx,   TRUE  },
 #endif
+#ifdef ALLEGRO_SDL2
+   {  SYSTEM_SDL2,    &system_sdl2,   TRUE  },
+#endif
    {  SYSTEM_NONE,      &system_none,     FALSE },
    {  0,                NULL,             0     }
 };

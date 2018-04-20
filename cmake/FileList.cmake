@@ -101,128 +101,6 @@ set(ALLEGRO_SRC_C_FILES
         src/misc/colconv.c
         )
 
-set(ALLEGRO_SRC_DOS_FILES
-        src/dos/adlib.c
-        src/dos/awedata.c
-        src/dos/dfile.c
-        src/dos/dgfxdrv.c
-        src/dos/djoydrv.c
-        src/dos/dkeybd.c
-        src/dos/dma.c
-        src/dos/dmouse.c
-        src/dos/dpmi.c
-        src/dos/dsnddrv.c
-        src/dos/dsystem.c
-        src/dos/dtimer.c
-        src/dos/emu8k.c
-        src/dos/emu8kmid.c
-        src/dos/essaudio.c
-        src/dos/gpro.c
-        src/dos/grip.c
-        src/dos/gripjoy.c
-        src/dos/gripfnc.s
-        src/dos/ifsega.c
-        src/dos/ifsega2f.c
-        src/dos/ifsega2p.c
-        src/dos/joystd.c
-        src/dos/mpu.c
-        src/dos/multijoy.c
-        src/dos/n64pad.c
-        src/dos/pic.c
-        src/dos/psxpad.c
-        src/dos/sb.c
-        src/dos/sndscape.c
-        src/dos/snespad.c
-        src/dos/sw.c
-        src/dos/swpp.c
-        src/dos/swpps.s
-        src/dos/vesa.c
-        src/dos/vesas.s
-        src/dos/wss.c
-        src/dos/ww.c
-        src/misc/modex.c
-        src/misc/modexgfx.s
-        src/misc/modexsms.c
-        src/misc/pckeys.c
-        src/misc/vbeaf.c
-        src/misc/vbeafs.s
-        src/misc/vbeafex.c
-        src/misc/vga.c
-        src/misc/vgaregs.c
-        )
-
-set(ALLEGRO_SRC_WIN_FILES
-        src/win/asmlock.s
-        src/win/dllver.rc
-        src/win/gdi.c
-        src/win/wddaccel.c
-        src/win/wddbmp.c
-        src/win/wddbmpl.c
-        src/win/wddraw.c
-        src/win/wddfull.c
-        src/win/wddlock.c
-        src/win/wddmode.c
-        src/win/wddovl.c
-        src/win/wddwin.c
-        src/win/wdsinput.c
-        src/win/wdsndmix.c
-        src/win/wdsound.c
-        src/win/wsndwo.c
-        src/win/wdxver.c
-        src/win/wdispsw.c
-        src/win/wfile.c
-        src/win/wgdi.c
-        src/win/wgfxdrv.c
-        src/win/winput.c
-        src/win/wjoydrv.c
-        src/win/wjoydx.c
-        src/win/wjoyhelp.c
-        src/win/wjoyw32.c
-        src/win/wkeybd.c
-        src/win/wmidi.c
-        src/win/wmouse.c
-        src/win/wsnddrv.c
-        src/win/wsystem.c
-        src/win/wthread.c
-        src/win/wtimer.c
-        src/win/wwnd.c
-        )
-
-set(ALLEGRO_SRC_BEOS_FILES
-        src/beos/baccel.cpp
-        src/beos/bdispsw.cpp
-        src/beos/bdwindow.cpp
-        src/beos/bgfx.c
-        src/beos/bgfxapi.cpp
-        src/beos/bgfxdrv.c
-        src/beos/bjoy.c
-        src/beos/bjoydrv.c
-        src/beos/bjoyapi.cpp
-        src/beos/bkey.c
-        src/beos/bkeyapi.cpp
-        src/beos/bkeydrv.c
-        src/beos/bmidi.c
-        src/beos/bmidiapi.cpp
-        src/beos/bmididrv.c
-        src/beos/bmousapi.cpp
-        src/beos/bmousdrv.c
-        src/beos/bmouse.c
-        src/beos/boverlay.cpp
-        src/beos/bsnd.c
-        src/beos/bsndapi.cpp
-        src/beos/bsnddrv.c
-        src/beos/bswitch.s
-        src/beos/bsysapi.cpp
-        src/beos/bsysdrv.c
-        src/beos/bsystem.c
-        src/beos/btimeapi.cpp
-        src/beos/btimedrv.c
-        src/beos/btimer.c
-        src/beos/bwindow.cpp
-        src/beos/bwscreen.cpp
-        src/unix/ufile.c
-        src/misc/pckeys.c
-        )
 
 set(ALLEGRO_SRC_LINUX_FILES
         src/linux/fbcon.c
@@ -287,18 +165,6 @@ set(ALLEGRO_SRC_UNIX_FILES
         src/linux/ljoy.c
         )
 
-set(ALLEGRO_SRC_X_FILES
-        src/x/xgfxdrv.c
-        src/x/xkeyboard.c
-        src/x/xmouse.c
-        src/x/xsystem.c
-        src/x/xtimer.c
-        src/x/xvtable.c
-        src/x/xwin.c
-        src/x/xdga2.c
-        src/x/xdga2s.s
-        src/x/xwins.s
-        )
 
 set(ALLEGRO_SRC_MACOSX_FILES
         src/macosx/cadigi.m
@@ -322,19 +188,13 @@ set(ALLEGRO_SRC_MACOSX_FILES
         src/unix/uthreads.c
         )
 
-set(ALLEGRO_SRC_PSP_FILES
-        src/psp/pdrivers.c
-        src/psp/pfile.c
-        src/psp/pgfx.c
-        src/psp/pjoy.c
-        src/psp/pkey.c
-        src/psp/pmouse.c
-        src/psp/psound.c
-        src/psp/psystem.c
-        src/psp/ptimer.c
-        src/psp/pvram.c
-        src/psp/pvtable8.c
+set(ALLEGRO_SRC_SDL2_FILES
+        src/sdl2/system.c
+        src/sdl2/drivers.c
+        src/unix/ufile.c
+        src/unix/usystem.c
         )
+
 
 set(ALLEGRO_INCLUDE_ALLEGRO_FILES
         include/allegro/3d.h
@@ -404,6 +264,7 @@ set(ALLEGRO_INCLUDE_ALLEGRO_PLATFORM_FILES
         include/allegro/platform/aintqnx.h
         include/allegro/platform/aintunix.h
         include/allegro/platform/aintwin.h
+        include/allegro/platform/aintsdl2.h
         include/allegro/platform/al386gcc.h
         include/allegro/platform/al386vc.h
         include/allegro/platform/al386wat.h
@@ -430,6 +291,8 @@ set(ALLEGRO_INCLUDE_ALLEGRO_PLATFORM_FILES
         # include/allegro/platform/alunixac.hin
         include/allegro/platform/alwatcom.h
         include/allegro/platform/alwin.h
+        include/allegro/platform/alsdl2.h
+        include/allegro/platform/alsdl2cfg.h
         include/allegro/platform/astdint.h
         include/allegro/platform/macdef.h
         )
