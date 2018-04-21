@@ -1,8 +1,5 @@
-
-
 #ifndef ALSDL2CFG_H
 #define ALSDL2CFG_H
-
 
 /* Provide implementations of missing functions */
 #define ALLEGRO_NO_STRICMP
@@ -22,7 +19,7 @@
 #define ALLEGRO_HAVE_MKSTEMP    1
 
 /* Describe this platform */
-#define ALLEGRO_PLATFORM_STR  "MacOS X"
+#define ALLEGRO_PLATFORM_STR  "SDL2"
 #define ALLEGRO_CONSOLE_OK
 #define ALLEGRO_USE_CONSTRUCTOR
 #define ALLEGRO_MULTITHREADED
@@ -41,9 +38,7 @@
 	#define ALLEGRO_NO_ASM
 #endif
 
-
 /* Arrange for other headers to be included later on */
 #define ALLEGRO_EXTRA_HEADER     "allegro/platform/alsdl2.h"
-
 
 #endif
