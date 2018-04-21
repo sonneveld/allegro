@@ -6,6 +6,23 @@
 
 const int DEFAULT_DISPLAY_INDEX = 0;
 
+
+// ----------------------------------------------------------------------------
+// EVENTS!
+// ----------------------------------------------------------------------------
+
+void process_sdl2_events (void) {
+   
+   SDL_PumpEvents();         
+
+   SDL_Event event;
+   while (SDL_PollEvent(&event)) {
+      // printf(" - %d\n", event.type);
+   }
+
+}
+
+
 // ----------------------------------------------------------------------------
 // SYSTEM
 // ----------------------------------------------------------------------------
@@ -331,7 +348,7 @@ static BITMAP *gfx_sdl2_init(int w, int h, int v_w, int v_h, int color_depth) {
         SDL_WINDOW_ALLOW_HIGHDPI   //|SDL_WINDOW_FULLSCREEN_DESKTOP                 // flags - see below
     );
 
-   renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+   renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC);
    screenTex = SDL_CreateTexture( renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, w, h );
 
    gfx_sdl2.w = w;
@@ -352,8 +369,7 @@ static void sdl2_gfx_set_window_title(AL_CONST char *title) {
    }
 }
 
-static void gfx_sdl2_vsync() {
-   
+void sdl2_present_screen() {
    SDL_RenderClear(renderer);
 
    unsigned char * pixels;
@@ -389,7 +405,7 @@ GFX_DRIVER gfx_sdl2 =
    .ascii_name = "SDL2 Windowed",
    .init = gfx_sdl2_init,
    .exit = gfx_sdl2_exit,
-   .vsync = gfx_sdl2_vsync,             
+   //.vsync = gfx_sdl2_vsync,             
    // .create_video_bitmap = NULL, //gfx_sdl2_create_video_bitmap,
    // .destroy_video_bitmap = NULL, // gfx_sdl2_destroy_video_bitmap,
    // .set_mouse_sprite = NULL, // gfx_sdl2_set_mouse_sprite,
@@ -463,4 +479,34 @@ MOUSE_DRIVER mouse_sdl2 = {
    // .analyse_data = NULL,       // AL_METHOD(int,  analyse_data, (AL_CONST char *buffer, int size));
    // .enable_hardware_cursor = sdl2_enable_hardware_cursor, 
    // .select_system_cursor = sdl2_select_system_cursor
+};
+
+
+// ----------------------------------------------------------------------------
+// KEYBOARD
+// ----------------------------------------------------------------------------
+
+static int sdl2_keyboard_init(void) {
+   return 0;
+}
+
+static void sdl2_keyboard_exit(void) {
+}
+
+KEYBOARD_DRIVER keyboard_sdl2 =
+{
+   .id = KEYBOARD_SDL2,
+   .name = empty_string,
+   .desc = empty_string,
+   .ascii_name = "SDL2 keyboard",
+   .autorepeat = TRUE,
+   .init = sdl2_keyboard_init,
+   .exit = sdl2_keyboard_exit,
+   .poll = sdl2_keyboard_poll,   // AL_METHOD(void, poll, (void));
+   // NULL,   // AL_METHOD(void, set_leds, (int leds));
+   // NULL,   // AL_METHOD(void, set_rate, (int delay, int rate));
+   // NULL,   // AL_METHOD(void, wait_for_input, (void));
+   // NULL,   // AL_METHOD(void, stop_waiting_for_input, (void));
+   // NULL,   // AL_METHOD(int,  scancode_to_ascii, (int scancode));
+   // NULL    // scancode_to_name
 };
