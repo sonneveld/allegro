@@ -328,11 +328,14 @@ static BITMAP *gfx_sdl2_init(int w, int h, int v_w, int v_h, int color_depth) {
         SDL_WINDOWPOS_CENTERED_DISPLAY(DEFAULT_DISPLAY_INDEX),           // initial y position
         w,                               // width, in pixels
         h,                               // height, in pixels
-        SDL_WINDOW_ALLOW_HIGHDPI                 // flags - see below
+        SDL_WINDOW_ALLOW_HIGHDPI   //|SDL_WINDOW_FULLSCREEN_DESKTOP                 // flags - see below
     );
 
    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
    screenTex = SDL_CreateTexture( renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, w, h );
+
+   gfx_sdl2.w = w;
+   gfx_sdl2.h = h;
 
    return displayed_video_bitmap;
 }
@@ -358,7 +361,7 @@ static void gfx_sdl2_vsync() {
 
    SDL_LockTexture(screenTex, NULL, (void **)&pixels, &pitch);
 
-   for (int i =0; i < displayed_video_bitmap->h; i++) {
+   for (int i = 0; i < displayed_video_bitmap->h; i++) {
       memcpy(pixels, displayed_video_bitmap->line[i], pitch);
       pixels += pitch;
    }
@@ -367,6 +370,15 @@ static void gfx_sdl2_vsync() {
 
    SDL_RenderCopy(renderer, screenTex, NULL, NULL);
    SDL_RenderPresent(renderer);
+}
+
+static int gfx_sdl2_show_mouse(struct BITMAP *bmp, int x, int y) {
+   SDL_ShowCursor(SDL_ENABLE);
+   return -1; // show cursor, but "fail" because we're not supporting hardware cursors
+}
+
+static void gfx_sdl2_hide_mouse() {
+   SDL_ShowCursor(SDL_DISABLE);
 }
 
 GFX_DRIVER gfx_sdl2 =
@@ -381,9 +393,74 @@ GFX_DRIVER gfx_sdl2 =
    // .create_video_bitmap = NULL, //gfx_sdl2_create_video_bitmap,
    // .destroy_video_bitmap = NULL, // gfx_sdl2_destroy_video_bitmap,
    // .set_mouse_sprite = NULL, // gfx_sdl2_set_mouse_sprite,
-   // .show_mouse = NULL, // gfx_sdl2_show_mouse,
-   // .hide_mouse = NULL, // gfx_sdl2_hide_mouse,
+   .show_mouse = gfx_sdl2_show_mouse, // gfx_sdl2_show_mouse,
+   .hide_mouse = gfx_sdl2_hide_mouse, // gfx_sdl2_hide_mouse,
    // .move_mouse = NULL, // gfx_sdl2_move_mouse,
    .linear = TRUE,
    .windowed = TRUE                   
+};
+
+
+// ----------------------------------------------------------------------------
+// MOUSE
+// ----------------------------------------------------------------------------
+
+static int sdl2_mouse_init(void) {
+   return 0;
+}
+
+static void sdl2_mouse_exit(void) {
+}
+
+static void sdl2_mouse_poll(void) {
+   int x;
+   int y;
+
+   int buttons = SDL_GetMouseState(&x, &y);
+
+   int new_mouse_b = 0;
+   if (buttons & SDL_BUTTON (SDL_BUTTON_LEFT)) {
+      new_mouse_b |= 1;
+   }
+   if (buttons & SDL_BUTTON (SDL_BUTTON_RIGHT)) {
+      new_mouse_b |= 2;
+   }
+   if (buttons & SDL_BUTTON (SDL_BUTTON_MIDDLE)) {
+      new_mouse_b |= 4;
+   }
+   if (buttons & SDL_BUTTON (SDL_BUTTON_X1)) {
+      new_mouse_b |= 8;
+   }
+   if (buttons & SDL_BUTTON (SDL_BUTTON_X2)) {
+      new_mouse_b |= 16;
+   }
+
+   _mouse_b = new_mouse_b;
+   _mouse_x = x;
+   _mouse_y = y;
+
+   _handle_mouse_input();
+}
+
+static void sdl2_mouse_position(int x, int y) {
+   SDL_WarpMouseInWindow(window, x, y);
+}
+
+ 
+MOUSE_DRIVER mouse_sdl2 = {
+   .id = MOUSE_SDL2,
+   .name = empty_string,
+   .desc = empty_string,
+   .ascii_name = "SDL2 mouse",
+   .init = sdl2_mouse_init,
+   .exit = sdl2_mouse_exit,
+   .poll = sdl2_mouse_poll,       // AL_METHOD(void, poll, (void));
+   //.timer_poll = NULL,       // AL_METHOD(void, timer_poll, (void));
+   .position = sdl2_mouse_position,
+   // .set_range = sdl2_mouse_set_range,
+   // .set_speed = NULL,       // AL_METHOD(void, set_speed, (int xspeed, int yspeed));
+   // .get_mickeys = sdl2_mouse_get_mickeys,
+   // .analyse_data = NULL,       // AL_METHOD(int,  analyse_data, (AL_CONST char *buffer, int size));
+   // .enable_hardware_cursor = sdl2_enable_hardware_cursor, 
+   // .select_system_cursor = sdl2_select_system_cursor
 };
