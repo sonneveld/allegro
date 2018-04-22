@@ -178,6 +178,38 @@ static void on_sdl_key_up_down(SDL_KeyboardEvent *event) {
    }
 }
 
+void on_sdl_mouse_motion(SDL_MouseMotionEvent *event) {
+   _mouse_x = event->x;
+   _mouse_y = event->y;
+   _handle_mouse_input(); 
+}
+
+static int sdl_button_to_allegro_bit(int button)
+{
+   switch (button) {
+      case SDL_BUTTON_LEFT: return 0x1;
+      case SDL_BUTTON_RIGHT: return 0x2;
+      case SDL_BUTTON_MIDDLE: return 0x4;
+      case SDL_BUTTON_X1: return 0x8;
+      case SDL_BUTTON_X2: return 0x10;
+   }
+   return 0x0;
+}
+
+void on_sdl_mouse_button(SDL_MouseButtonEvent *event) 
+{
+   _mouse_x = event->x;
+   _mouse_y = event->y;
+
+   if (event->type == SDL_MOUSEBUTTONDOWN) {
+      _mouse_b |= sdl_button_to_allegro_bit(event->button);
+   } else {
+      _mouse_b &= ~sdl_button_to_allegro_bit(event->button);
+   }
+
+   _handle_mouse_input(); 
+}
+
 void process_sdl2_events (void) {
    SDL_Event event;
    while (SDL_PollEvent(&event)) {
@@ -186,7 +218,13 @@ void process_sdl2_events (void) {
          case SDL_KEYUP:
             on_sdl_key_up_down(&event.key);
             break;
-            
+         case SDL_MOUSEMOTION:
+            on_sdl_mouse_motion(&event.motion);
+            break;
+         case SDL_MOUSEBUTTONDOWN:
+         case SDL_MOUSEBUTTONUP:
+            on_sdl_mouse_button(&event.button);
+            break;
       }
    }
 }
@@ -676,33 +714,6 @@ static void sdl2_mouse_exit(void) {
 
 static void sdl2_mouse_poll(void) {
    process_sdl2_events();
-
-   int x;
-   int y;
-   int buttons = SDL_GetMouseState(&x, &y);
-
-   int new_mouse_b = 0;
-   if (buttons & SDL_BUTTON (SDL_BUTTON_LEFT)) {
-      new_mouse_b |= 1;
-   }
-   if (buttons & SDL_BUTTON (SDL_BUTTON_RIGHT)) {
-      new_mouse_b |= 2;
-   }
-   if (buttons & SDL_BUTTON (SDL_BUTTON_MIDDLE)) {
-      new_mouse_b |= 4;
-   }
-   if (buttons & SDL_BUTTON (SDL_BUTTON_X1)) {
-      new_mouse_b |= 8;
-   }
-   if (buttons & SDL_BUTTON (SDL_BUTTON_X2)) {
-      new_mouse_b |= 16;
-   }
-
-   _mouse_b = new_mouse_b;
-   _mouse_x = x;
-   _mouse_y = y;
-
-   _handle_mouse_input();
 }
 
 static void sdl2_mouse_position(int x, int y) {
