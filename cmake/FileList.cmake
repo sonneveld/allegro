@@ -19,7 +19,7 @@ set(ALLEGRO_SRC_FILES
         src/font.c
         src/fontbios.c
         src/fontbmp.c
-        src/fontdat.c
+        #src/fontdat.c
         src/fontgrx.c
         src/fonttxt.c
         src/fsel.c
@@ -45,7 +45,7 @@ set(ALLEGRO_SRC_FILES
         src/poly3d.c
         src/polygon.c
         src/quantize.c
-        src/quat.c
+        #src/quat.c
         src/readbmp.c
         src/readfont.c
         src/readsmp.c
@@ -97,7 +97,7 @@ set(ALLEGRO_SRC_C_FILES
         src/c/czscan24.c
         src/c/czscan32.c
         src/c/czscan8.c
-        src/misc/ccolconv.c
+        # src/misc/ccolconv.c
         src/misc/colconv.c
         )
 
@@ -225,7 +225,7 @@ set(ALLEGRO_INCLUDE_ALLEGRO_FILES
         include/allegro/midi.h
         include/allegro/mouse.h
         include/allegro/palette.h
-        include/allegro/quat.h
+        #include/allegro/quat.h
         include/allegro/rle.h
         include/allegro/sound.h
         include/allegro/stream.h
