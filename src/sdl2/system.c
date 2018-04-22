@@ -6,6 +6,7 @@
 
 const int DEFAULT_DISPLAY_INDEX = 0;
 
+static void (*_on_close_callback)(void) = 0;
 
 // ----------------------------------------------------------------------------
 // EVENTS!
@@ -225,6 +226,11 @@ void process_sdl2_events (void) {
          case SDL_MOUSEBUTTONUP:
             on_sdl_mouse_button(&event.button);
             break;
+         case SDL_QUIT:
+            if (_on_close_callback) {
+               _on_close_callback();
+            }
+            break;
       }
    }
 }
@@ -296,8 +302,8 @@ static int sdl2_sys_find_resource(char *dest, AL_CONST char *resource, int size)
 static void sdl2_gfx_set_window_title(AL_CONST char *title);
 
 static int sdl2_sys_set_close_button_callback(void (*proc)(void)) {
-   SDL_Log("TODO when events are processed");
-   return -1;
+   _on_close_callback = proc;
+   return 0;
 }
 
 static void sdl2_sys_message(AL_CONST char *msg) {
