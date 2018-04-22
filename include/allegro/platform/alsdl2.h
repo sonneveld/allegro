@@ -58,8 +58,10 @@ AL_VAR(KEYBOARD_DRIVER, keyboard_sdl2);
 AL_VAR(MOUSE_DRIVER, mouse_sdl2);
 
 /* Gfx driver */
-#define GFX_SDL2                 AL_ID('S','D','L','G')
-AL_VAR(GFX_DRIVER, gfx_sdl2);
+#define GFX_SDL2_WINDOW                     AL_ID('S','D','L','W')
+#define GFX_SDL2_FULLSCREEN                 AL_ID('S','D','L','F')
+AL_VAR(GFX_DRIVER, gfx_sdl2_window);
+AL_VAR(GFX_DRIVER, gfx_sdl2_fullscreen);
 
 /* Digital sound driver */
 #define DIGI_SDL2                AL_ID('S','D','L','S')
@@ -70,8 +72,3 @@ AL_VAR(DIGI_DRIVER, digi_sdl2);
 AL_VAR(JOYSTICK_DRIVER, joystick_sdl2);
 
 #endif
-
-
-
-
-

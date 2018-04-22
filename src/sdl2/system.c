@@ -330,7 +330,7 @@ static SDL_Renderer *renderer = NULL;
 static SDL_Texture *screenTex = NULL;
 static const char * window_title = "AGS";
 
-static BITMAP *gfx_sdl2_init(int w, int h, int v_w, int v_h, int color_depth) {
+static BITMAP *gfx_sdl2_init_driver(GFX_DRIVER *drv, int w, int h, int v_w, int v_h, int color_depth) {
 
    if (color_depth != 32) {
       ustrzcpy(allegro_error, ALLEGRO_ERROR_SIZE, get_config_text("Unsupported color depth"));
@@ -339,23 +339,43 @@ static BITMAP *gfx_sdl2_init(int w, int h, int v_w, int v_h, int color_depth) {
 
    displayed_video_bitmap = create_bitmap_ex(color_depth, w, h);
 
+   Uint32 flags = SDL_WINDOW_ALLOW_HIGHDPI;
+   if (!drv->windowed) {
+      flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+   }
+
    window = SDL_CreateWindow(
         window_title,                  // window title
         SDL_WINDOWPOS_CENTERED_DISPLAY(DEFAULT_DISPLAY_INDEX),           // initial x position
         SDL_WINDOWPOS_CENTERED_DISPLAY(DEFAULT_DISPLAY_INDEX),           // initial y position
         w,                               // width, in pixels
         h,                               // height, in pixels
-        SDL_WINDOW_ALLOW_HIGHDPI   //|SDL_WINDOW_FULLSCREEN_DESKTOP                 // flags - see below
+        flags                 // flags 
     );
 
    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC);
+
+   SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");  // make the scaled rendering look smoother.
+   SDL_RenderSetLogicalSize(renderer, w, h);
+
    screenTex = SDL_CreateTexture( renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, w, h );
 
-   gfx_sdl2.w = w;
-   gfx_sdl2.h = h;
+   drv->w = w;
+   drv->h = h;
 
    return displayed_video_bitmap;
 }
+
+
+static BITMAP *gfx_sdl2_init_window(int w, int h, int v_w, int v_h, int color_depth) {
+   return gfx_sdl2_init_driver(&gfx_sdl2_window, w, h, v_w, v_h, color_depth);
+}
+
+static BITMAP *gfx_sdl2_init_fullscreen(int w, int h, int v_w, int v_h, int color_depth) {
+   return gfx_sdl2_init_driver(&gfx_sdl2_fullscreen, w, h, v_w, v_h, color_depth);
+}
+
+
 static void gfx_sdl2_exit(BITMAP *bmp) {
    SDL_DestroyTexture(screenTex);
    SDL_DestroyRenderer(renderer);
@@ -372,7 +392,7 @@ static void sdl2_gfx_set_window_title(AL_CONST char *title) {
 void sdl2_present_screen() {
    SDL_RenderClear(renderer);
 
-   unsigned char * pixels;
+   /*unsigned char * pixels;
    int pitch;
 
    SDL_LockTexture(screenTex, NULL, (void **)&pixels, &pitch);
@@ -382,7 +402,9 @@ void sdl2_present_screen() {
       pixels += pitch;
    }
 
-   SDL_UnlockTexture(screenTex);
+   SDL_UnlockTexture(screenTex); */
+
+   SDL_UpdateTexture(screenTex, NULL, displayed_video_bitmap->line[0], displayed_video_bitmap->w * sizeof (Uint32));
 
    SDL_RenderCopy(renderer, screenTex, NULL, NULL);
    SDL_RenderPresent(renderer);
@@ -397,13 +419,53 @@ static void gfx_sdl2_hide_mouse() {
    SDL_ShowCursor(SDL_DISABLE);
 }
 
-GFX_DRIVER gfx_sdl2 =
+static GFX_MODE window_gfx_mode = {
+   .width = -1,
+   .height = -1,
+   .bpp = 32
+};
+
+static GFX_MODE_LIST window_mode_list = {
+   .num_modes = 1,
+   .mode = &window_gfx_mode,
+};
+
+static GFX_MODE_LIST *gfx_sdl2_window_fetch_mode_list (void) {
+   SDL_Rect rect;
+   int result = SDL_GetDisplayUsableBounds(DEFAULT_DISPLAY_INDEX, &rect);
+   if (result != 0) { return NULL; }
+   window_gfx_mode.height = rect.h;
+   window_gfx_mode.width = rect.w;
+   return &window_mode_list;
+}
+
+static GFX_MODE fullscreen_gfx_mode = {
+   .width = -1,
+   .height = -1,
+   .bpp = 32
+};
+
+static GFX_MODE_LIST fullscreen_mode_list = {
+   .num_modes = 1,
+   .mode = &fullscreen_gfx_mode,
+};
+
+static GFX_MODE_LIST *gfx_sdl2_fullscreen_fetch_mode_list (void) {
+   SDL_Rect rect;
+   int result = SDL_GetDisplayBounds(DEFAULT_DISPLAY_INDEX, &rect);
+   if (result != 0) { return NULL; }
+   fullscreen_gfx_mode.height = rect.h;
+   fullscreen_gfx_mode.width = rect.w;
+   return &fullscreen_mode_list;
+}
+
+GFX_DRIVER gfx_sdl2_window =
 {
-   .id = GFX_SDL2,
+   .id = GFX_SDL2_WINDOW,
    .name = empty_string,
    .desc = empty_string,
    .ascii_name = "SDL2 Windowed",
-   .init = gfx_sdl2_init,
+   .init = gfx_sdl2_init_window,
    .exit = gfx_sdl2_exit,
    //.vsync = gfx_sdl2_vsync,             
    // .create_video_bitmap = NULL, //gfx_sdl2_create_video_bitmap,
@@ -412,8 +474,29 @@ GFX_DRIVER gfx_sdl2 =
    .show_mouse = gfx_sdl2_show_mouse, // gfx_sdl2_show_mouse,
    .hide_mouse = gfx_sdl2_hide_mouse, // gfx_sdl2_hide_mouse,
    // .move_mouse = NULL, // gfx_sdl2_move_mouse,
+   .fetch_mode_list = gfx_sdl2_window_fetch_mode_list,
    .linear = TRUE,
    .windowed = TRUE                   
+};
+
+GFX_DRIVER gfx_sdl2_fullscreen =
+{
+   .id = GFX_SDL2_FULLSCREEN,
+   .name = empty_string,
+   .desc = empty_string,
+   .ascii_name = "SDL2 Fullscreen",
+   .init = gfx_sdl2_init_fullscreen,
+   .exit = gfx_sdl2_exit,
+   //.vsync = gfx_sdl2_vsync,             
+   // .create_video_bitmap = NULL, //gfx_sdl2_create_video_bitmap,
+   // .destroy_video_bitmap = NULL, // gfx_sdl2_destroy_video_bitmap,
+   // .set_mouse_sprite = NULL, // gfx_sdl2_set_mouse_sprite,
+   .show_mouse = gfx_sdl2_show_mouse, // gfx_sdl2_show_mouse,
+   .hide_mouse = gfx_sdl2_hide_mouse, // gfx_sdl2_hide_mouse,
+   // .move_mouse = NULL, // gfx_sdl2_move_mouse,
+   .fetch_mode_list = gfx_sdl2_fullscreen_fetch_mode_list,
+   .linear = TRUE,
+   .windowed = FALSE                   
 };
 
 
