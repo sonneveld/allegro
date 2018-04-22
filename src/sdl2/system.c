@@ -450,7 +450,7 @@ static int digi_sdl2_init(int input, int voices) {
    want.freq = 48000;
    want.format = AUDIO_S16SYS;
    want.channels = 2;
-   want.samples = 1024;  // number of frames, not samples
+   want.samples = 2048;  // number of frames, not samples
    want.callback = MyAudioCallback; 
 
    dev = SDL_OpenAudioDevice(NULL, 0, &want, &have, SDL_AUDIO_ALLOW_FREQUENCY_CHANGE);
