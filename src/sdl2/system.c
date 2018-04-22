@@ -8,6 +8,9 @@ const int DEFAULT_DISPLAY_INDEX = 0;
 
 static void (*_on_close_callback)(void) = 0;
 
+static int mouse_x_mickeys = 0;
+static int mouse_y_mickeys = 0;
+
 // ----------------------------------------------------------------------------
 // EVENTS!
 // ----------------------------------------------------------------------------
@@ -182,6 +185,8 @@ static void on_sdl_key_up_down(SDL_KeyboardEvent *event) {
 void on_sdl_mouse_motion(SDL_MouseMotionEvent *event) {
    _mouse_x = event->x;
    _mouse_y = event->y;
+   mouse_x_mickeys += event->xrel;
+   mouse_y_mickeys += event->yrel;
    _handle_mouse_input(); 
 }
 
@@ -726,7 +731,14 @@ static void sdl2_mouse_position(int x, int y) {
    SDL_WarpMouseInWindow(window, x, y);
 }
 
- 
+static void sdl2_mouse_get_mickeys (int *mickeyx, int *mickeyy)
+{
+   *mickeyx = mouse_x_mickeys;
+   *mickeyy = mouse_y_mickeys;
+   mouse_x_mickeys = 0;
+   mouse_y_mickeys = 0;
+}
+
 MOUSE_DRIVER mouse_sdl2 = {
    .id = MOUSE_SDL2,
    .name = empty_string,
@@ -739,7 +751,7 @@ MOUSE_DRIVER mouse_sdl2 = {
    .position = sdl2_mouse_position,
    // .set_range = sdl2_mouse_set_range,
    // .set_speed = NULL,       // AL_METHOD(void, set_speed, (int xspeed, int yspeed));
-   // .get_mickeys = sdl2_mouse_get_mickeys,
+   .get_mickeys = sdl2_mouse_get_mickeys,
    // .analyse_data = NULL,       // AL_METHOD(int,  analyse_data, (AL_CONST char *buffer, int size));
    // .enable_hardware_cursor = sdl2_enable_hardware_cursor, 
    // .select_system_cursor = sdl2_select_system_cursor
