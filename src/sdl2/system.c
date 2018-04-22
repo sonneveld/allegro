@@ -557,7 +557,7 @@ static BITMAP *gfx_sdl2_init_driver(GFX_DRIVER *drv, int w, int h, int v_w, int 
 
    displayed_video_bitmap = create_bitmap_ex(color_depth, w, h);
 
-   Uint32 flags = SDL_WINDOW_ALLOW_HIGHDPI;
+   Uint32 flags = SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE;
    if (!drv->windowed) {
       flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
    }
@@ -748,7 +748,7 @@ MOUSE_DRIVER mouse_sdl2 = {
    .exit = sdl2_mouse_exit,
    .poll = sdl2_mouse_poll,       // AL_METHOD(void, poll, (void));
    //.timer_poll = NULL,       // AL_METHOD(void, timer_poll, (void));
-   .position = sdl2_mouse_position,
+   // .position = sdl2_mouse_position,
    // .set_range = sdl2_mouse_set_range,
    // .set_speed = NULL,       // AL_METHOD(void, set_speed, (int xspeed, int yspeed));
    .get_mickeys = sdl2_mouse_get_mickeys,
