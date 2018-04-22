@@ -419,44 +419,38 @@ static void gfx_sdl2_hide_mouse() {
    SDL_ShowCursor(SDL_DISABLE);
 }
 
-static GFX_MODE window_gfx_mode = {
-   .width = -1,
-   .height = -1,
-   .bpp = 32
-};
-
-static GFX_MODE_LIST window_mode_list = {
-   .num_modes = 1,
-   .mode = &window_gfx_mode,
-};
-
 static GFX_MODE_LIST *gfx_sdl2_window_fetch_mode_list (void) {
    SDL_Rect rect;
    int result = SDL_GetDisplayUsableBounds(DEFAULT_DISPLAY_INDEX, &rect);
    if (result != 0) { return NULL; }
-   window_gfx_mode.height = rect.h;
-   window_gfx_mode.width = rect.w;
-   return &window_mode_list;
+
+   GFX_MODE_LIST *mode_list = _AL_MALLOC(sizeof(GFX_MODE_LIST));
+   mode_list->num_modes = 1;
+   mode_list->mode = _AL_MALLOC(sizeof(GFX_MODE)*2);
+   mode_list->mode[0] = (GFX_MODE){
+      .width = rect.w,
+      .height = rect.h,
+      .bpp = 32
+   };
+   mode_list->mode[1] = (GFX_MODE){0};
+   return mode_list;
 }
-
-static GFX_MODE fullscreen_gfx_mode = {
-   .width = -1,
-   .height = -1,
-   .bpp = 32
-};
-
-static GFX_MODE_LIST fullscreen_mode_list = {
-   .num_modes = 1,
-   .mode = &fullscreen_gfx_mode,
-};
 
 static GFX_MODE_LIST *gfx_sdl2_fullscreen_fetch_mode_list (void) {
    SDL_Rect rect;
    int result = SDL_GetDisplayBounds(DEFAULT_DISPLAY_INDEX, &rect);
    if (result != 0) { return NULL; }
-   fullscreen_gfx_mode.height = rect.h;
-   fullscreen_gfx_mode.width = rect.w;
-   return &fullscreen_mode_list;
+
+   GFX_MODE_LIST *mode_list = _AL_MALLOC(sizeof(GFX_MODE_LIST));
+   mode_list->num_modes = 1;
+   mode_list->mode = _AL_MALLOC(sizeof(GFX_MODE)*2);
+   mode_list->mode[0] = (GFX_MODE){
+      .width = rect.w,
+      .height = rect.h,
+      .bpp = 32
+   };
+   mode_list->mode[1] = (GFX_MODE){0};
+   return mode_list;
 }
 
 GFX_DRIVER gfx_sdl2_window =
