@@ -29,6 +29,8 @@
 extern "C" {
 #endif
 
+// just a monotonically increasing number using `date '+%s'`
+#define MACOS_PORT_VERSION (1524488744L)
 
 #ifdef __cplusplus
 }
