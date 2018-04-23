@@ -42,78 +42,34 @@ static void gfx_cocoa_enable_acceleration(GFX_VTABLE *vtable);
 
 GFX_DRIVER gfx_cocoagl_window =
 {
-   GFX_COCOAGL_WINDOW,
-   empty_string,
-   empty_string,
-   "Cocoa GL window",
-   osx_gl_window_init,
-   osx_gl_window_exit,
-   NULL,                         /* AL_METHOD(int, scroll, (int x, int y)); */
-   NULL,                         /* AL_METHOD(void, vsync, (void)); */
-   NULL,                         /* AL_METHOD(void, set_palette, (AL_CONST struct RGB *p, int from, int to, int retracesync)); */
-   NULL,                         /* AL_METHOD(int, request_scroll, (int x, int y)); */
-   NULL,                         /* AL_METHOD(int, poll_scroll, (void)); */
-   NULL,                         /* AL_METHOD(void, enable_triple_buffer, (void)); */
-   NULL,                         /* AL_METHOD(struct BITMAP *, create_video_bitmap, (int width, int height)); */
-   NULL,                         /* AL_METHOD(void, destroy_video_bitmap, (struct BITMAP *bitmap)); */
-   NULL,                         /* AL_METHOD(int, show_video_bitmap, (BITMAP *bitmap)); */
-   NULL,                         /* AL_METHOD(int, request_video_bitmap, (BITMAP *bitmap)); */
-   NULL,                         /* AL_METHOD(BITMAP *, create_system_bitmap, (int width, int height)); */
-   NULL,                         /* AL_METHOD(void, destroy_system_bitmap, (BITMAP *bitmap)); */
-   osx_mouse_set_sprite,         /* AL_METHOD(int, set_mouse_sprite, (BITMAP *sprite, int xfocus, int yfocus)); */
-   osx_mouse_show,               /* AL_METHOD(int, show_mouse, (BITMAP *bmp, int x, int y)); */
-   osx_mouse_hide,               /* AL_METHOD(void, hide_mouse, (void)); */
-   osx_mouse_move,               /* AL_METHOD(void, move_mouse, (int x, int y)); */
-   NULL,                         /* AL_METHOD(void, drawing_mode, (void)); */
-   NULL,                         /* AL_METHOD(void, save_video_state, (void)); */
-   NULL,                         /* AL_METHOD(void, restore_video_state, (void)); */
-   NULL,                         /* AL_METHOD(void, set_blender_mode, (int mode, int r, int g, int b, int a)); */
-   NULL,                         /* AL_METHOD(int, fetch_mode_list, (void)); */
-   0, 0,                         /* physical (not virtual!) screen size */
-   TRUE,                         /* true if video memory is linear */
-   0,                            /* bank size, in bytes */
-   0,                            /* bank granularity, in bytes */
-   0,                            /* video memory size, in bytes */
-   0,                            /* physical address of video memory */
-   TRUE                          /* true if driver runs windowed */
+    .id = GFX_COCOAGL_WINDOW,
+    .name = empty_string,
+    .desc = empty_string,
+    .ascii_name = "Cocoa GL window",
+    .init = osx_gl_window_init,
+    .exit = osx_gl_window_exit,
+    .set_mouse_sprite = osx_mouse_set_sprite,
+    .show_mouse = osx_mouse_show,
+    .hide_mouse = osx_mouse_hide,
+    .move_mouse = osx_mouse_move,
+    .linear = TRUE,
+    .windowed = TRUE,
 };
 
 GFX_DRIVER gfx_cocoagl_full =
 {
-    GFX_COCOAGL_FULLSCREEN,
-    empty_string,
-    empty_string,
-    "Cocoa GL full",
-    osx_gl_full_init,
-    osx_gl_full_exit,
-    NULL,                         /* AL_METHOD(int, scroll, (int x, int y)); */
-    NULL,                         /* AL_METHOD(void, vsync, (void)); */
-    NULL,                         /* AL_METHOD(void, set_palette, (AL_CONST struct RGB *p, int from, int to, int retracesync)); */
-    NULL,                         /* AL_METHOD(int, request_scroll, (int x, int y)); */
-    NULL,                         /* AL_METHOD(int, poll_scroll, (void)); */
-    NULL,                         /* AL_METHOD(void, enable_triple_buffer, (void)); */
-    NULL,                         /* AL_METHOD(struct BITMAP *, create_video_bitmap, (int width, int height)); */
-    NULL,                         /* AL_METHOD(void, destroy_video_bitmap, (struct BITMAP *bitmap)); */
-    NULL,                         /* AL_METHOD(int, show_video_bitmap, (BITMAP *bitmap)); */
-    NULL,                         /* AL_METHOD(int, request_video_bitmap, (BITMAP *bitmap)); */
-    NULL,                         /* AL_METHOD(BITMAP *, create_system_bitmap, (int width, int height)); */
-    NULL,                         /* AL_METHOD(void, destroy_system_bitmap, (BITMAP *bitmap)); */
-    osx_mouse_set_sprite,         /* AL_METHOD(int, set_mouse_sprite, (BITMAP *sprite, int xfocus, int yfocus)); */
-    osx_mouse_show,               /* AL_METHOD(int, show_mouse, (BITMAP *bmp, int x, int y)); */
-    osx_mouse_hide,               /* AL_METHOD(void, hide_mouse, (void)); */
-    osx_mouse_move,               /* AL_METHOD(void, move_mouse, (int x, int y)); */
-    NULL,                         /* AL_METHOD(void, drawing_mode, (void)); */
-    NULL,                         /* AL_METHOD(void, save_video_state, (void)); */
-    NULL,                         /* AL_METHOD(void, restore_video_state, (void)); */
-    NULL,                         /* AL_METHOD(void, set_blender_mode, (int mode, int r, int g, int b, int a)); */
-    NULL,                         /* AL_METHOD(int, fetch_mode_list, (void)); */
-    0, 0,                         /* physical (not virtual!) screen size */
-    TRUE,                         /* true if video memory is linear */
-    0,                            /* bank size, in bytes */
-    0,                            /* bank granularity, in bytes */
-    0,                            /* video memory size, in bytes */
-    0,                            /* physical address of video memory */
-    FALSE                         /* true if driver runs windowed */
+    .id = GFX_COCOAGL_FULLSCREEN,
+    .name = empty_string,
+    .desc = empty_string,
+    .ascii_name = "Cocoa GL full",
+    .init = osx_gl_full_init,
+    .exit = osx_gl_full_exit,
+    .set_mouse_sprite = osx_mouse_set_sprite,
+    .show_mouse = osx_mouse_show,
+    .hide_mouse = osx_mouse_hide,
+    .move_mouse = osx_mouse_move,
+    .linear = TRUE,
+    .windowed = FALSE,
 };
 
 
