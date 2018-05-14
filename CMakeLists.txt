@@ -270,12 +270,8 @@ if(WIN32)
     set(ALLEGRO_WINDOWS 1)
 endif()
 
-if(APPLE)
+if(APPLE OR UNIX)
     set(ALLEGRO_SDL2 1)
-endif(APPLE)
-
-if(UNIX AND NOT APPLE AND NOT BEOS)
-    set(ALLEGRO_UNIX 1)
 endif()
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${WFLAGS} ${WFLAGS_C_ONLY}")

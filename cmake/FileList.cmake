@@ -45,7 +45,7 @@ set(ALLEGRO_SRC_FILES
         src/poly3d.c
         src/polygon.c
         src/quantize.c
-        #src/quat.c
+        src/quat.c
         src/readbmp.c
         src/readfont.c
         src/readsmp.c
@@ -225,7 +225,7 @@ set(ALLEGRO_INCLUDE_ALLEGRO_FILES
         include/allegro/midi.h
         include/allegro/mouse.h
         include/allegro/palette.h
-        #include/allegro/quat.h
+        include/allegro/quat.h
         include/allegro/rle.h
         include/allegro/sound.h
         include/allegro/stream.h
