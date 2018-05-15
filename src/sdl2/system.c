@@ -327,7 +327,11 @@ static int sdl2_sys_get_desktop_resolution(int *width, int *height) {
 }
 
 void *sdl2_create_mutex(void) {
-   return SDL_CreateMutex();
+   void *result = SDL_CreateMutex();
+   if (result == NULL) {
+      SDL_Log("SDL_CreateMutex failed: %s", SDL_GetError());
+   }
+   return result;
 }
 
 void sdl2_destroy_mutex(void *handle) {
