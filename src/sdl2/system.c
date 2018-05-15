@@ -639,7 +639,11 @@ static void gfx_sdl2_hide_mouse() {
 
 static GFX_MODE_LIST *gfx_sdl2_window_fetch_mode_list (void) {
    SDL_Rect rect;
+#if SDL_VERSION_ATLEAST(2, 0, 5)
    int result = SDL_GetDisplayUsableBounds(DEFAULT_DISPLAY_INDEX, &rect);
+#else
+   int result = SDL_GetDisplayBounds(DEFAULT_DISPLAY_INDEX, &rect);
+#endif
    if (result != 0) { return NULL; }
 
    GFX_MODE_LIST *mode_list = _AL_MALLOC(sizeof(GFX_MODE_LIST));
