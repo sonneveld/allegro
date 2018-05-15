@@ -577,10 +577,36 @@ static BITMAP *gfx_sdl2_init_driver(GFX_DRIVER *drv, int w, int h, int v_w, int 
 
    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC);
 
+   SDL_RendererInfo rinfo = {0};
+   if (SDL_GetRendererInfo(renderer, &rinfo) == 0) {
+      TRACE("Created Renderer: %s\n", rinfo.name);
+      TRACE("Available texture formats:\n");
+      for (int i = 0; i < rinfo.num_texture_formats; i++) {
+         TRACE(" - %s\n", SDL_GetPixelFormatName(rinfo.texture_formats[i]));
+      }
+   }
+
    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");  // make the scaled rendering look smoother.
    SDL_RenderSetLogicalSize(renderer, w, h);
 
-   screenTex = SDL_CreateTexture( renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, w, h );
+   screenTex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, w, h);
+   
+   _rgb_r_shift_15 = 10;
+   _rgb_g_shift_15 = 5;
+   _rgb_b_shift_15 = 0;
+
+   _rgb_r_shift_16 = 11;
+   _rgb_g_shift_16 = 5;
+   _rgb_b_shift_16 = 0;
+
+   _rgb_r_shift_24 = 16;
+   _rgb_g_shift_24 = 8;
+   _rgb_b_shift_24 = 0;
+
+   _rgb_a_shift_32 = 24;
+   _rgb_r_shift_32 = 16; 
+   _rgb_g_shift_32 = 8; 
+   _rgb_b_shift_32 = 0;
 
    drv->w = w;
    drv->h = h;
