@@ -751,7 +751,7 @@ GFX_DRIVER gfx_sdl2_fullscreen =
 // ----------------------------------------------------------------------------
 
 static int sdl2_mouse_init(void) {
-   return 0;
+   return 5;  // number of mouse buttons
 }
 
 static void sdl2_mouse_exit(void) {
