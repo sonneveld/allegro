@@ -10,7 +10,10 @@
    extern "C" {
 #endif
 
-AL_FUNC(void, process_sdl2_events, (void));
+#include "SDL.h"
+
+AL_FUNC(void, sdl2_process_single_event, (SDL_Event *event));
+AL_FUNC(void, sdl2_process_all_pending_events, (void));
 AL_FUNC(void, sdl2_present_screen, (void));
 
 #ifdef __cplusplus

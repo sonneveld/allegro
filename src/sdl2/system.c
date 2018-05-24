@@ -216,27 +216,31 @@ void on_sdl_mouse_button(SDL_MouseButtonEvent *event)
    _handle_mouse_input(); 
 }
 
-void process_sdl2_events (void) {
+void sdl2_process_single_event (SDL_Event *event) {
+   switch (event->type) {
+      case SDL_KEYDOWN:
+      case SDL_KEYUP:
+         on_sdl_key_up_down(&event->key);
+         break;
+      case SDL_MOUSEMOTION:
+         on_sdl_mouse_motion(&event->motion);
+         break;
+      case SDL_MOUSEBUTTONDOWN:
+      case SDL_MOUSEBUTTONUP:
+         on_sdl_mouse_button(&event->button);
+         break;
+      case SDL_QUIT:
+         if (_on_close_callback) {
+            _on_close_callback();
+         }
+         break;
+   }
+}
+
+void sdl2_process_all_pending_events (void) {
    SDL_Event event;
    while (SDL_PollEvent(&event)) {
-      switch (event.type) {
-         case SDL_KEYDOWN:
-         case SDL_KEYUP:
-            on_sdl_key_up_down(&event.key);
-            break;
-         case SDL_MOUSEMOTION:
-            on_sdl_mouse_motion(&event.motion);
-            break;
-         case SDL_MOUSEBUTTONDOWN:
-         case SDL_MOUSEBUTTONUP:
-            on_sdl_mouse_button(&event.button);
-            break;
-         case SDL_QUIT:
-            if (_on_close_callback) {
-               _on_close_callback();
-            }
-            break;
-      }
+      sdl2_process_single_event(&event);
    }
 }
 
@@ -757,9 +761,8 @@ static int sdl2_mouse_init(void) {
 static void sdl2_mouse_exit(void) {
 }
 
-static void sdl2_mouse_poll(void) {
-   process_sdl2_events();
-}
+// static void sdl2_mouse_poll(void) {
+// }
 
 static void sdl2_mouse_position(int x, int y) {
    SDL_WarpMouseInWindow(window, x, y);
@@ -780,7 +783,7 @@ MOUSE_DRIVER mouse_sdl2 = {
    .ascii_name = "SDL2 mouse",
    .init = sdl2_mouse_init,
    .exit = sdl2_mouse_exit,
-   .poll = sdl2_mouse_poll,       // AL_METHOD(void, poll, (void));
+   // .poll = sdl2_mouse_poll,       // AL_METHOD(void, poll, (void));
    //.timer_poll = NULL,       // AL_METHOD(void, timer_poll, (void));
    // .position = sdl2_mouse_position,
    // .set_range = sdl2_mouse_set_range,
@@ -803,9 +806,8 @@ static int sdl2_keyboard_init(void) {
 static void sdl2_keyboard_exit(void) {
 }
 
-static void sdl2_keyboard_poll(void) {
-   process_sdl2_events();
-}
+// static void sdl2_keyboard_poll(void) {
+//}
 
 KEYBOARD_DRIVER keyboard_sdl2 =
 {
@@ -816,7 +818,7 @@ KEYBOARD_DRIVER keyboard_sdl2 =
    .autorepeat = FALSE,           // set to TRUE if you want allegro to repeat chars
    .init = sdl2_keyboard_init,
    .exit = sdl2_keyboard_exit,
-   .poll = sdl2_keyboard_poll,   // AL_METHOD(void, poll, (void));
+   //.poll = sdl2_keyboard_poll,   // AL_METHOD(void, poll, (void));
    // NULL,   // AL_METHOD(void, set_leds, (int leds));
    // NULL,   // AL_METHOD(void, set_rate, (int delay, int rate));
    // NULL,   // AL_METHOD(void, wait_for_input, (void));
