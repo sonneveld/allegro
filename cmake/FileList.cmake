@@ -108,6 +108,12 @@ set(ALLEGRO_SRC_SDL2_FILES
         src/unix/usystem.c
         )
 
+set(ALLEGRO_SRC_SDL2_MSVC_FILES
+        src/sdl2/system.c
+        src/sdl2/drivers.c
+        src/win/wsystem.c
+        src/win/wfile.c
+        )
 
 set(ALLEGRO_INCLUDE_ALLEGRO_FILES
         include/allegro/3d.h

@@ -304,7 +304,11 @@ static int sdl2_sys_find_resource(char *dest, AL_CONST char *resource, int size)
       }
    } */
 
+#ifdef ALLEGRO_SDL2_MSVC
+   return -1; 
+#else
    return _unix_find_resource(dest, resource, size);
+#endif
 }
 
 

@@ -1,45 +1,9 @@
-
 #ifndef ALSDL2_H
 #define ALSDL2_H
 
 #ifndef ALLEGRO_SDL2
    #error bad include
 #endif
-
-
-#ifndef SCAN_DEPEND
-   #include <stdio.h>
-   #include <stdlib.h>
-   #include <fcntl.h>
-   #include <unistd.h>
-   #include <signal.h>
-   #include <pthread.h>
-   #if defined __OBJC__ && defined ALLEGRO_SRC
-      #undef TRUE
-      #undef FALSE
-      #import <mach/mach.h>
-      #import <mach/mach_error.h>
-      #import <AppKit/AppKit.h>
-      #import <ApplicationServices/ApplicationServices.h>
-      #import <Cocoa/Cocoa.h>
-      #import <CoreAudio/CoreAudio.h>
-      #import <AudioUnit/AudioUnit.h>
-      #import <AudioToolbox/AudioToolbox.h>
-      #import <QuickTime/QuickTime.h>
-      #import <IOKit/IOKitLib.h>
-      #import <IOKit/IOCFPlugIn.h>
-      #import <IOKit/hid/IOHIDLib.h>
-      #import <IOKit/hid/IOHIDKeys.h>
-      #import <Kernel/IOKit/hidsystem/IOHIDUsageTables.h>
-      #undef TRUE
-      #undef FALSE
-      #undef assert
-      #define TRUE  -1
-      #define FALSE 0
-   #endif
-#endif
-
-
 
 /* System driver */
 #define SYSTEM_SDL2            AL_ID('S','D','L',' ')

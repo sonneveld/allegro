@@ -12,6 +12,7 @@
 #cmakedefine ALLEGRO_UNIX
 #cmakedefine ALLEGRO_WATCOM
 #cmakedefine ALLEGRO_SDL2
+#cmakedefine ALLEGRO_SDL2_MSVC
 
 /* These are always defined now. */
 #define ALLEGRO_NO_ASM
