@@ -19,7 +19,7 @@ set(ALLEGRO_SRC_FILES
         src/font.c
         src/fontbios.c
         src/fontbmp.c
-        #src/fontdat.c
+        src/fontdat.c
         src/fontgrx.c
         src/fonttxt.c
         src/fsel.c
@@ -97,95 +97,8 @@ set(ALLEGRO_SRC_C_FILES
         src/c/czscan24.c
         src/c/czscan32.c
         src/c/czscan8.c
-        # src/misc/ccolconv.c
+        src/misc/ccolconv.c
         src/misc/colconv.c
-        )
-
-
-set(ALLEGRO_SRC_LINUX_FILES
-        src/linux/fbcon.c
-        src/linux/lconsole.c
-        src/linux/lgfxdrv.c
-        # Listed with UNIX files.
-        # src/linux/ljoy.c
-        src/linux/lkeybd.c
-        src/linux/lmemory.c
-        src/linux/lmouse.c
-        src/linux/lmsedrv.c
-        src/linux/lmsegpmd.c
-        src/linux/lmsems.c
-        src/linux/lmseps2.c
-        src/linux/lmseev.c
-        src/linux/lstddrv.c
-        src/linux/lsystem.c
-        src/linux/ltimer.c
-        src/linux/lvga.c
-        src/linux/lvgahelp.c
-        src/linux/svgalib.c
-        src/linux/svgalibs.s
-        src/linux/tslib.c
-        src/linux/vtswitch.c
-        src/misc/vbeaf.c
-        src/misc/vbeafs.s
-        src/misc/vgaregs.c
-        src/misc/vga.c
-        # src/misc/modex.c
-        # src/misc/modexgfx.s
-        )
-
-set(ALLEGRO_SRC_UNIX_FILES
-        src/unix/alsa9.c
-        src/unix/alsamidi.c
-        src/unix/arts.c
-        src/unix/sgial.c
-        src/unix/jack.c
-        src/unix/udjgpp.c
-        src/unix/udrvlist.c
-        src/unix/udummy.c
-        src/unix/uesd.c
-        src/unix/ufile.c
-        src/unix/ugfxdrv.c
-        src/unix/ujoydrv.c
-        src/unix/ukeybd.c
-        src/unix/umain.c
-        src/unix/umodules.c
-        src/unix/umouse.c
-        src/unix/uoss.c
-        src/unix/uossmidi.c
-        src/unix/uptimer.c
-        src/unix/usigalrm.c
-        src/unix/usnddrv.c
-        src/unix/ustimer.c
-        src/unix/usystem.c
-        src/unix/uthreads.c
-        src/unix/utimer.c
-        # src/misc/modexsms.c
-
-        # May be used without enabling the entire Linux console port.
-        src/linux/ljoy.c
-        )
-
-
-set(ALLEGRO_SRC_MACOSX_FILES
-        src/macosx/cadigi.m
-        src/macosx/camidi.m
-        src/macosx/drivers.m
-        src/macosx/hidjoy.m
-        src/macosx/hidman.m
-        src/macosx/keybd.m
-        src/macosx/pcpu.m
-        src/macosx/qtmidi.m
-        src/macosx/quartz.m
-        src/macosx/qzfull.m
-        src/macosx/qzmouse.m
-        src/macosx/qzwindow.m
-        src/macosx/soundman.m
-        src/macosx/system.m
-        src/unix/ufile.c
-        src/unix/utimer.c
-        src/unix/uptimer.c
-        src/unix/usystem.c
-        src/unix/uthreads.c
         )
 
 set(ALLEGRO_SRC_SDL2_FILES
@@ -250,51 +163,28 @@ set(ALLEGRO_INCLUDE_ALLEGRO_INLINE_FILES
 
 set(ALLEGRO_INCLUDE_ALLEGRO_INTERNAL_FILES
         include/allegro/internal/aintern.h
-        include/allegro/internal/aintvga.h
         include/allegro/internal/alconfig.h
         )
 
 set(ALLEGRO_INCLUDE_ALLEGRO_PLATFORM_FILES
-        include/allegro/platform/aintbeos.h
-        include/allegro/platform/aintdos.h
         include/allegro/platform/aintlnx.h
-        include/allegro/platform/aintmac.h
         include/allegro/platform/aintosx.h
-        include/allegro/platform/aintpsp.h
-        include/allegro/platform/aintqnx.h
         include/allegro/platform/aintunix.h
         include/allegro/platform/aintwin.h
         include/allegro/platform/aintsdl2.h
-        include/allegro/platform/al386gcc.h
-        include/allegro/platform/al386vc.h
-        include/allegro/platform/al386wat.h
-        include/allegro/platform/albcc32.h
-        include/allegro/platform/albecfg.h
-        include/allegro/platform/albeos.h
-        include/allegro/platform/aldjgpp.h
-        include/allegro/platform/aldmc.h
-        include/allegro/platform/aldos.h
-        include/allegro/platform/almac.h
-        include/allegro/platform/almaccfg.h
         include/allegro/platform/almngw32.h
         include/allegro/platform/almsvc.h
         include/allegro/platform/alosx.h
         include/allegro/platform/alosxcfg.h
         # include/allegro/platform/alplatf.h.cmake
-        include/allegro/platform/alpsp.h
-        include/allegro/platform/alpspcfg.h
-        include/allegro/platform/alqnx.h
-        include/allegro/platform/alqnxcfg.h
         include/allegro/platform/alucfg.h
         include/allegro/platform/alunix.h
         # include/allegro/platform/alunixac.h.cmake
         # include/allegro/platform/alunixac.hin
-        include/allegro/platform/alwatcom.h
         include/allegro/platform/alwin.h
         include/allegro/platform/alsdl2.h
         include/allegro/platform/alsdl2cfg.h
         include/allegro/platform/astdint.h
-        include/allegro/platform/macdef.h
         )
 
 #-----------------------------------------------------------------------------#
