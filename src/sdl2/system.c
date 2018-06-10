@@ -257,7 +257,7 @@ static int trace_handler(AL_CONST char *msg) {
 static int sdl2_sys_init(void)
 {
    SDL_LogSetAllPriority(SDL_LOG_PRIORITY_VERBOSE);
-   
+
    if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO|SDL_INIT_TIMER|SDL_INIT_EVENTS) != 0) {
       SDL_Log("Unable to initialize SDL: %s", SDL_GetError());
       return -1;
@@ -594,7 +594,8 @@ static BITMAP *gfx_sdl2_init_driver(GFX_DRIVER *drv, int w, int h, int v_w, int 
       }
    }
 
-   SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");  // make the scaled rendering look smoother.
+   SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
+   // SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");  // make the scaled rendering look smoother.
    SDL_RenderSetLogicalSize(renderer, w, h);
 
    screenTex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, w, h);
