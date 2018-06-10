@@ -668,6 +668,22 @@ void sdl2_present_screen() {
    SDL_RenderPresent(renderer);
 }
 
+
+void sdl2_toggle_fullscreen() {
+
+   int isFullscreen = SDL_GetWindowFlags(window) & (SDL_WINDOW_FULLSCREEN|SDL_WINDOW_FULLSCREEN_DESKTOP);
+
+   int result = 0;
+   if (isFullscreen) {
+      result = SDL_SetWindowFullscreen(window, 0);
+   } else {
+      result = SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+   }
+   if (result != 0) {
+      SDL_Log("Unable to toggle fullscreen: %s", SDL_GetError());
+   }
+}
+
 static int gfx_sdl2_show_mouse(struct BITMAP *bmp, int x, int y) {
    SDL_ShowCursor(SDL_ENABLE);
    return -1; // show cursor, but "fail" because we're not supporting hardware cursors
