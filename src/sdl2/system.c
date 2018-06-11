@@ -600,7 +600,14 @@ static BITMAP *gfx_sdl2_init_driver(GFX_DRIVER *drv, int w, int h, int v_w, int 
 
    screenTex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, w, h);
    
-#if 0
+   /*
+   SDL_PIXELFORMAT_ARGB8888:
+   *Amask = masks[0] = 0xFF000000;   24
+   *Rmask = masks[1] = 0x00FF0000;   16  
+   *Gmask = masks[2] = 0x0000FF00;   8
+   *Bmask = masks[3] = 0x000000FF;   0 
+   */
+
    _rgb_r_shift_15 = 10;
    _rgb_g_shift_15 = 5;
    _rgb_b_shift_15 = 0;
@@ -617,7 +624,6 @@ static BITMAP *gfx_sdl2_init_driver(GFX_DRIVER *drv, int w, int h, int v_w, int 
    _rgb_r_shift_32 = 16; 
    _rgb_g_shift_32 = 8; 
    _rgb_b_shift_32 = 0;
-#endif
 
    drv->w = w;
    drv->h = h;
