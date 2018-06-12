@@ -824,6 +824,17 @@ static void sdl2_mouse_exit(void) {
 // }
 
 static void sdl2_mouse_position(int x, int y) {
+   if (renderer) {
+      SDL_Rect viewport;
+      float scalex, scaley;
+
+      SDL_RenderGetViewport(renderer, &viewport);
+      SDL_RenderGetScale(renderer, &scalex, &scaley);
+
+      x = scalex * (viewport.x + x);
+      y = scaley * (viewport.y + y);
+   }
+
    SDL_WarpMouseInWindow(window, x, y);
 }
 
@@ -844,7 +855,7 @@ MOUSE_DRIVER mouse_sdl2 = {
    .exit = sdl2_mouse_exit,
    // .poll = sdl2_mouse_poll,       // AL_METHOD(void, poll, (void));
    //.timer_poll = NULL,       // AL_METHOD(void, timer_poll, (void));
-   // .position = sdl2_mouse_position,
+   .position = sdl2_mouse_position,
    // .set_range = sdl2_mouse_set_range,
    // .set_speed = NULL,       // AL_METHOD(void, set_speed, (int xspeed, int yspeed));
    .get_mickeys = sdl2_mouse_get_mickeys,
