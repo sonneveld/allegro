@@ -216,6 +216,8 @@ void on_sdl_mouse_button(SDL_MouseButtonEvent *event)
    _handle_mouse_input(); 
 }
 
+static void on_window_properties_changed();
+
 void sdl2_process_single_event (SDL_Event *event) {
    switch (event->type) {
       case SDL_KEYDOWN:
@@ -232,6 +234,11 @@ void sdl2_process_single_event (SDL_Event *event) {
       case SDL_QUIT:
          if (_on_close_callback) {
             _on_close_callback();
+         }
+         break;
+      case SDL_WINDOWEVENT:
+         if (event->window.event == SDL_WINDOWEVENT_MOVED) {
+            on_window_properties_changed();
          }
          break;
    }
@@ -694,6 +701,10 @@ void sdl2_present_screen() {
 
    SDL_RenderCopy(renderer, screenTex, NULL, NULL);
    SDL_RenderPresent(renderer);
+}
+
+static void on_window_properties_changed() {
+   SDL_RenderSetLogicalSize(renderer, gfx_display_bitmap->w, gfx_display_bitmap->h);
 }
 
 static void gfx_sdl2_set_palette(AL_CONST struct RGB *p, int from, int to, int retracesync) {
