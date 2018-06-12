@@ -554,7 +554,8 @@ DIGI_DRIVER digi_sdl2 =
 // GRAPHICS
 // ----------------------------------------------------------------------------
 
-static BITMAP * displayed_video_bitmap;
+static BITMAP * gfx_backing_bitmap = NULL;
+static BITMAP * gfx_display_bitmap = NULL;
 static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
 static SDL_Texture *screenTex = NULL;
@@ -562,12 +563,15 @@ static const char * window_title = "AGS";
 
 static BITMAP *gfx_sdl2_init_driver(GFX_DRIVER *drv, int w, int h, int v_w, int v_h, int color_depth) {
 
-   if (color_depth != 32) {
+   if (color_depth != 32 && color_depth != 8) {
       ustrzcpy(allegro_error, ALLEGRO_ERROR_SIZE, get_config_text("Unsupported color depth"));
       return NULL;
    }
 
-   displayed_video_bitmap = create_bitmap_ex(color_depth, w, h);
+   gfx_display_bitmap = create_bitmap_ex(32, w, h);
+   if (color_depth == 8) {
+      gfx_backing_bitmap = create_bitmap_ex(8, w, h);
+   }
 
    Uint32 flags = SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE;
    if (!drv->windowed) {
@@ -628,7 +632,10 @@ static BITMAP *gfx_sdl2_init_driver(GFX_DRIVER *drv, int w, int h, int v_w, int 
    drv->w = w;
    drv->h = h;
 
-   return displayed_video_bitmap;
+   if (gfx_backing_bitmap) {
+      return gfx_backing_bitmap;
+   }
+   return gfx_display_bitmap;
 }
 
 
@@ -654,6 +661,9 @@ static void sdl2_gfx_set_window_title(AL_CONST char *title) {
    }
 }
 
+static Uint32 _sdl2_palette[256];
+
+
 void sdl2_present_screen() {
    SDL_RenderClear(renderer);
 
@@ -662,19 +672,37 @@ void sdl2_present_screen() {
 
    SDL_LockTexture(screenTex, NULL, (void **)&pixels, &pitch);
 
-   for (int i = 0; i < displayed_video_bitmap->h; i++) {
-      memcpy(pixels, displayed_video_bitmap->line[i], pitch);
+   for (int i = 0; i < gfx_display_bitmap->h; i++) {
+      memcpy(pixels, gfx_display_bitmap->line[i], pitch);
       pixels += pitch;
    }
 
    SDL_UnlockTexture(screenTex); */
 
-   SDL_UpdateTexture(screenTex, NULL, displayed_video_bitmap->line[0], displayed_video_bitmap->w * sizeof (Uint32));
+   if (gfx_backing_bitmap) {
+      int size = gfx_backing_bitmap->h * gfx_backing_bitmap->w;
+      Uint8 *src = gfx_backing_bitmap->line[0];
+      Uint32 *dest = gfx_display_bitmap->line[0];
+      for (int i=0; i < size; i++) {
+         *dest = _sdl2_palette[*src];
+         src++;
+         dest++;
+      }
+   }
+
+   SDL_UpdateTexture(screenTex, NULL, gfx_display_bitmap->line[0], gfx_display_bitmap->w * sizeof (Uint32));
 
    SDL_RenderCopy(renderer, screenTex, NULL, NULL);
    SDL_RenderPresent(renderer);
 }
 
+static void gfx_sdl2_set_palette(AL_CONST struct RGB *p, int from, int to, int retracesync) {
+   for (int i=from; i<=to; i++) {
+      RGB c = p[i];
+      _sdl2_palette[i] = (_rgb_scale_6[c.r] << 16) | (_rgb_scale_6[c.g] << 8) | (_rgb_scale_6[c.b]);
+   }
+   sdl2_present_screen();
+}
 
 void sdl2_toggle_fullscreen() {
 
@@ -746,7 +774,8 @@ GFX_DRIVER gfx_sdl2_window =
    .ascii_name = "SDL2 Windowed",
    .init = gfx_sdl2_init_window,
    .exit = gfx_sdl2_exit,
-   //.vsync = gfx_sdl2_vsync,             
+   //.vsync = gfx_sdl2_vsync,   
+   .set_palette = gfx_sdl2_set_palette,          
    // .create_video_bitmap = NULL, //gfx_sdl2_create_video_bitmap,
    // .destroy_video_bitmap = NULL, // gfx_sdl2_destroy_video_bitmap,
    // .set_mouse_sprite = NULL, // gfx_sdl2_set_mouse_sprite,
@@ -767,6 +796,7 @@ GFX_DRIVER gfx_sdl2_fullscreen =
    .init = gfx_sdl2_init_fullscreen,
    .exit = gfx_sdl2_exit,
    //.vsync = gfx_sdl2_vsync,             
+   .set_palette = gfx_sdl2_set_palette,          
    // .create_video_bitmap = NULL, //gfx_sdl2_create_video_bitmap,
    // .destroy_video_bitmap = NULL, // gfx_sdl2_destroy_video_bitmap,
    // .set_mouse_sprite = NULL, // gfx_sdl2_set_mouse_sprite,
