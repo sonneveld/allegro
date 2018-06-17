@@ -28,7 +28,9 @@
 #include <string.h>
 #include <limits.h>
 #include <fcntl.h>
+#ifndef WIN32
 #include <unistd.h>
+#endif
 
 #include "allegro.h"
 #include "allegro/internal/aintern.h"

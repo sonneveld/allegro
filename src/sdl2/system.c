@@ -672,6 +672,10 @@ static Uint32 _sdl2_palette[256];
 
 
 void sdl2_present_screen() {
+
+   if (!renderer) { return; }
+   if (!gfx_display_bitmap) { return; }
+
    SDL_RenderClear(renderer);
 
    /*unsigned char * pixels;
@@ -704,6 +708,9 @@ void sdl2_present_screen() {
 }
 
 static void on_window_properties_changed() {
+   if (!renderer) { return; }
+   if (!gfx_display_bitmap) { return; }
+
    SDL_RenderSetLogicalSize(renderer, gfx_display_bitmap->w, gfx_display_bitmap->h);
 }
 
