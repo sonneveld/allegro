@@ -1,0 +1,22 @@
+language: c
+compiler:
+  - gcc
+addons:
+  apt:
+    packages:
+    - build-essential
+    - pkg-config 
+    - cmake 
+    - libsdl2-2.0 
+    - libsdl2-dev 
+    - libfreetype6-dev 
+    - libogg-dev 
+    - libtheora-dev 
+    - libvorbis-dev
+    - liballegro4-dev
+    - libaldmb1-dev
+script:
+- mkdir build-sdl2
+- cd build-sdl2
+- cmake -D SHARED=off -DCMAKE_BUILD_TYPE=Debug ..
+- make
