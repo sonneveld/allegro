@@ -1,0 +1,38 @@
+version: "{build}"
+image: Visual Studio 2017
+platform:
+ - Win32
+
+configuration:
+ - Debug MD
+ - Debug MT
+ - Release MD
+ - Release MT
+
+before_build:
+  - ps: $Env:PLATFORM_TOOLSET="v141"
+
+build:
+  project: build/VS2015/ALLEGRO.sln
+  parallel: true
+  verbosity: minimal
+  
+artifacts:
+  - path: build\VS2015\lib\alleg-debug-static.lib
+    name: alleg-debug-static.lib
+  - path: build\VS2015\lib\alleg-debug-static-mt.lib
+    name: alleg-debug-static-mt.lib
+  - path: build\VS2015\lib\alleg-static.lib
+    name: alleg-static.lib
+  - path: build\VS2015\lib\alleg-static-mt.lib
+    name: alleg-static-mt.lib
+
+
+deploy:
+- provider: GitHub
+  auth_token:
+    secure: HovB+Z9gvI7LJtT4uoSk8W7WYGT9n1UJn14NKkg8EgdosS/Ba36tzP2LqIy42NFL
+  artifact: alleg-debug-static.lib, alleg-debug-static-mt.lib, alleg-static.lib, alleg-static-mt.lib
+  draft: false
+  on:
+    appveyor_repo_tag: true        # deploy on tag push only

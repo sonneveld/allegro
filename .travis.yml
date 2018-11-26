@@ -1,0 +1,28 @@
+language: c
+compiler:
+  - gcc
+addons:
+  apt:
+    packages:
+    - build-essential
+    - pkg-config 
+    - cmake 
+    - libfreetype6-dev 
+    - libogg-dev 
+    - libtheora-dev 
+    - libvorbis-dev
+    - liballegro4-dev
+    - libaldmb1-dev
+script:
+- mkdir build-liballegro
+- cd build-liballegro
+- cmake -D SHARED=off -DCMAKE_BUILD_TYPE=Debug ..
+- make
+- tar -zcf lib-allegro.tar.gz include/ lib/
+deploy:
+  provider: releases
+  skip_cleanup: true
+  api_key: $GITHUB_TOKEN
+  file: lib-allegro.tar.gz
+  on:
+    tags: true
