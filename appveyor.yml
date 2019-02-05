@@ -9,10 +9,6 @@ configuration:
  - Release MD
  - Release MT
 
-branches:
-  only:
-    - allegro-4.4.2-agspatch
-
 before_build:
   - ps: $Env:PLATFORM_TOOLSET="v141"
 
