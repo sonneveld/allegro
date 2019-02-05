@@ -23,7 +23,7 @@ deploy:
   provider: releases
   skip_cleanup: true
   api_key: $GITHUB_TOKEN
-  file: build/lib-allegro.tar.gz
+  file: build-liballegro/lib-allegro.tar.gz
   on:
     repo: adventuregamestudio/lib-allegro
     branch: allegro-4.4.2-agspatch
