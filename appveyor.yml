@@ -30,3 +30,14 @@ artifacts:
     name: alleg-static.lib
   - path: build\VS2015\lib\alleg-static-mt.lib
     name: alleg-static-mt.lib
+
+
+deploy:
+- provider: GitHub
+  auth_token:
+    secure: HovB+Z9gvI7LJtT4uoSk8W7WYGT9n1UJn14NKkg8EgdosS/Ba36tzP2LqIy42NFL
+  artifact: alleg-debug-static.lib, alleg-debug-static-mt.lib, alleg-static.lib, alleg-static-mt.lib
+  draft: false
+  on:
+    branch: allegro-4.4.2-agspatch # release from allegro-4.4.2-agspatch branch only
+    appveyor_repo_tag: true        # deploy on tag push only

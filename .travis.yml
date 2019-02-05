@@ -18,3 +18,13 @@ script:
 - cd build-liballegro
 - cmake -D SHARED=off -DCMAKE_BUILD_TYPE=Debug ..
 - make
+- tar -zcf lib-allegro.tar.gz include/ lib/
+deploy:
+  provider: releases
+  skip_cleanup: true
+  api_key: $GITHUB_TOKEN
+  file: build/lib-allegro.tar.gz
+  on:
+    repo: adventuregamestudio/lib-allegro
+    branch: allegro-4.4.2-agspatch
+    tags: true
