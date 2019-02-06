@@ -57,8 +57,6 @@ AL_FUNC(void, matrix_to_quat, (AL_CONST struct MATRIX_f *m, struct QUAT *q));
    }
 #endif
 
-#include "inline/3dmaths.inl"
-
 #endif          /* ifndef ALLEGRO_3DMATHS_H */
 
 

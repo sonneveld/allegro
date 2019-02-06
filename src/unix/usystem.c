@@ -51,17 +51,8 @@
 /* list the available drivers */
 _DRIVER_INFO _system_driver_list[] =
 {
-#ifdef ALLEGRO_WITH_XWINDOWS
-   {  SYSTEM_XWINDOWS,  &system_xwin,     TRUE  },
-#endif
-#ifdef ALLEGRO_LINUX
-   {  SYSTEM_LINUX,     &system_linux,    TRUE  },
-#endif
-#ifdef ALLEGRO_QNX
-   {  SYSTEM_QNX,       &system_qnx,      TRUE  },
-#endif
-#ifdef ALLEGRO_MACOSX
-   {  SYSTEM_MACOSX,    &system_macosx,   TRUE  },
+#ifdef ALLEGRO_SDL2
+   {  SYSTEM_SDL2,    &system_sdl2,   TRUE  },
 #endif
    {  SYSTEM_NONE,      &system_none,     FALSE },
    {  0,                NULL,             0     }

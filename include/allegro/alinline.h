@@ -26,9 +26,5 @@
 
 #include "inline/fmaths.inl"
 
-#include "inline/3dmaths.inl"
-
 #include "inline/matrix.inl"
 
-/* alcompat.h includes some inline functions */
-#include "alcompat.h"

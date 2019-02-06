@@ -61,18 +61,6 @@
 #include "allegro/3d.h"
 #include "allegro/3dmaths.h"
 
-
-#ifndef ALLEGRO_NO_COMPATIBILITY
-   #include "allegro/alcompat.h"
-#endif
-
-#ifndef ALLEGRO_NO_FIX_CLASS
-   #ifdef __cplusplus
-      #include "allegro/fix.h"
-   #endif
-#endif
-
-
 #ifdef ALLEGRO_EXTRA_HEADER
    #include ALLEGRO_EXTRA_HEADER
 #endif

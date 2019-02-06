@@ -36,32 +36,10 @@
       #include "allegro/platform/alplatf.h"
    #endif
 
-   #if defined ALLEGRO_DJGPP
-      #include "allegro/platform/aldjgpp.h"
-   #elif defined ALLEGRO_WATCOM
-      #include "allegro/platform/alwatcom.h"
-   #elif defined ALLEGRO_MINGW32
-      #include "allegro/platform/almngw32.h"
-   #elif defined ALLEGRO_DMC
-      #include "allegro/platform/aldmc.h"
-   #elif defined ALLEGRO_BCC32
-      #include "allegro/platform/albcc32.h"
-   #elif defined ALLEGRO_MSVC
-      #include "allegro/platform/almsvc.h"
-   #elif defined ALLEGRO_HAIKU
-      #include "allegro/platform/albecfg.h"
-   #elif defined ALLEGRO_BEOS
-      #include "allegro/platform/albecfg.h"
-   #elif defined ALLEGRO_MPW
-      #include "allegro/platform/almaccfg.h"
-   #elif defined ALLEGRO_MACOSX
-      #include "allegro/platform/alosxcfg.h"
-   #elif defined ALLEGRO_QNX
-      #include "allegro/platform/alqnxcfg.h"
-   #elif defined ALLEGRO_UNIX
-      #include "allegro/platform/alucfg.h"
-   #elif defined ALLEGRO_PSP
-      #include "allegro/platform/alpspcfg.h"
+   #if defined ALLEGRO_MSVC_SDL2
+      #include "allegro/platform/almsvc-sdl2.h"   
+   #elif defined ALLEGRO_UNIX_SDL2
+      #include "allegro/platform/alucfg-sdl2.h"   
    #else
       #error platform not supported
    #endif

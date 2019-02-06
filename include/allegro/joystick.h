@@ -120,7 +120,6 @@ AL_ARRAY(_DRIVER_INFO, _joystick_driver_list);
    {
 
 #define END_JOYSTICK_DRIVER_LIST                               \
-      {  JOY_TYPE_NONE,    &joystick_none,      TRUE  },       \
       {  0,                NULL,                0     }        \
    };
 
