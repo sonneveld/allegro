@@ -17,7 +17,6 @@ set(ALLEGRO_SRC_FILES
         src/graphics.c
         src/gsprite.c
         src/inline.c
-        src/keyboard.c
         src/lbm.c
         src/libc.c
         src/lzss.c

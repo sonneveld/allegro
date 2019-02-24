@@ -13,10 +13,6 @@ AL_VAR(SYSTEM_DRIVER, system_sdl2);
 #define TIMER_SDL2               AL_ID('S','D','L','T')
 AL_VAR(TIMER_DRIVER, timer_sdl2);
 
-/* Keyboard driver */
-#define KEYBOARD_SDL2              AL_ID('S','D','L','K')
-AL_VAR(KEYBOARD_DRIVER, keyboard_sdl2);
-
 /* Mouse drivers */
 #define MOUSE_SDL2               AL_ID('S','D','L','M')
 AL_VAR(MOUSE_DRIVER, mouse_sdl2);

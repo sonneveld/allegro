@@ -9,7 +9,6 @@
 
 _DRIVER_INFO _keyboard_driver_list[] =
 {
-   { KEYBOARD_SDL2,         &keyboard_sdl2,         TRUE  },
    { 0,                       NULL,                     0     }
 };
 
