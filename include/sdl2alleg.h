@@ -16,6 +16,7 @@ AL_FUNC(void, sdl2_process_single_event, (SDL_Event *event));
 AL_FUNC(void, sdl2_process_all_pending_events, (void));
 AL_FUNC(void, sdl2_present_screen, (void));
 AL_FUNC(void, sdl2_toggle_fullscreen, (void));
+AL_FUNC(void, sdl2_mouse_position, (int x, int y));
 
 #ifdef __cplusplus
    }

@@ -23,7 +23,6 @@ set(ALLEGRO_SRC_FILES
         src/math.c
         src/midi.c
         src/mixer.c
-        src/mouse.c
         src/pcx.c
         src/poly3d.c
         src/polygon.c

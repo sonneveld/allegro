@@ -8,69 +8,14 @@ const int DEFAULT_DISPLAY_INDEX = 0;
 
 static void (*_on_close_callback)(void) = 0;
 
-static int mouse_x_mickeys = 0;
-static int mouse_y_mickeys = 0;
-
 // ----------------------------------------------------------------------------
 // EVENTS!
 // ----------------------------------------------------------------------------
-
-void on_sdl_mouse_motion(SDL_MouseMotionEvent *event) {
-   _mouse_x = event->x;
-   _mouse_y = event->y;
-   mouse_x_mickeys += event->xrel;
-   mouse_y_mickeys += event->yrel;
-   _handle_mouse_input(); 
-}
-
-static int sdl_button_to_allegro_bit(int button)
-{
-   switch (button) {
-      case SDL_BUTTON_LEFT: return 0x1;
-      case SDL_BUTTON_RIGHT: return 0x2;
-      case SDL_BUTTON_MIDDLE: return 0x4;
-      case SDL_BUTTON_X1: return 0x8;
-      case SDL_BUTTON_X2: return 0x10;
-   }
-   return 0x0;
-}
-
-void on_sdl_mouse_button(SDL_MouseButtonEvent *event) 
-{
-   _mouse_x = event->x;
-   _mouse_y = event->y;
-
-   if (event->type == SDL_MOUSEBUTTONDOWN) {
-      _mouse_b |= sdl_button_to_allegro_bit(event->button);
-   } else {
-      _mouse_b &= ~sdl_button_to_allegro_bit(event->button);
-   }
-
-   _handle_mouse_input(); 
-}
-
-
-void on_sdl_mouse_wheel(SDL_MouseWheelEvent *event) 
-{
-   _mouse_z += event->y;
-
-   _handle_mouse_input(); 
-}
 
 static void on_window_properties_changed();
 
 void sdl2_process_single_event (SDL_Event *event) {
    switch (event->type) {
-      case SDL_MOUSEMOTION:
-         on_sdl_mouse_motion(&event->motion);
-         break;
-      case SDL_MOUSEBUTTONDOWN:
-      case SDL_MOUSEBUTTONUP:
-         on_sdl_mouse_button(&event->button);
-         break;
-      case SDL_MOUSEWHEEL:
-         on_sdl_mouse_wheel(&event->wheel);
-         break;
       case SDL_QUIT:
          if (_on_close_callback) {
             _on_close_callback();
@@ -680,17 +625,7 @@ GFX_DRIVER gfx_sdl2_fullscreen =
 // MOUSE
 // ----------------------------------------------------------------------------
 
-static int sdl2_mouse_init(void) {
-   return 5;  // number of mouse buttons
-}
-
-static void sdl2_mouse_exit(void) {
-}
-
-// static void sdl2_mouse_poll(void) {
-// }
-
-static void sdl2_mouse_position(int x, int y) {
+void sdl2_mouse_position(int x, int y) {
    if (renderer) {
       SDL_Rect viewport;
       float scalex, scaley;
@@ -704,29 +639,3 @@ static void sdl2_mouse_position(int x, int y) {
 
    SDL_WarpMouseInWindow(window, x, y);
 }
-
-static void sdl2_mouse_get_mickeys (int *mickeyx, int *mickeyy)
-{
-   *mickeyx = mouse_x_mickeys;
-   *mickeyy = mouse_y_mickeys;
-   mouse_x_mickeys = 0;
-   mouse_y_mickeys = 0;
-}
-
-MOUSE_DRIVER mouse_sdl2 = {
-   .id = MOUSE_SDL2,
-   .name = empty_string,
-   .desc = empty_string,
-   .ascii_name = "SDL2 mouse",
-   .init = sdl2_mouse_init,
-   .exit = sdl2_mouse_exit,
-   // .poll = sdl2_mouse_poll,       // AL_METHOD(void, poll, (void));
-   //.timer_poll = NULL,       // AL_METHOD(void, timer_poll, (void));
-   .position = sdl2_mouse_position,
-   // .set_range = sdl2_mouse_set_range,
-   // .set_speed = NULL,       // AL_METHOD(void, set_speed, (int xspeed, int yspeed));
-   .get_mickeys = sdl2_mouse_get_mickeys,
-   // .analyse_data = NULL,       // AL_METHOD(int,  analyse_data, (AL_CONST char *buffer, int size));
-   // .enable_hardware_cursor = sdl2_enable_hardware_cursor, 
-   // .select_system_cursor = sdl2_select_system_cursor
-};

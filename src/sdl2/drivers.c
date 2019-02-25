@@ -22,7 +22,6 @@ _DRIVER_INFO _timer_driver_list[] =
 
 _DRIVER_INFO _mouse_driver_list[] =
 {
-   { MOUSE_SDL2,            &mouse_sdl2,            TRUE  },
    { 0,                       NULL,                     0     }
 };
 
