@@ -260,17 +260,6 @@ void _soft_triangle(BITMAP *bmp, int x1, int y1, int x2, int y2, int x3, int y3,
 {
    ASSERT(bmp);
 
-   #if (defined ALLEGRO_GCC) && (defined ALLEGRO_I386)
-
-      /* note: this depends on a dodgy assumption about parameter passing 
-       * conventions. I assume that the point coordinates are all on the 
-       * stack in consecutive locations, so I can pass that block of stack 
-       * memory as the array for polygon() without bothering to copy the 
-       * data to a temporary location. 
-       */
-      polygon(bmp, 3, &x1, color);
-
-   #else
    {
       /* portable version for other platforms */
       int point[6];
@@ -281,6 +270,5 @@ void _soft_triangle(BITMAP *bmp, int x1, int y1, int x2, int y2, int x3, int y3,
 
       polygon(bmp, 3, point, color);
    }
-   #endif
 }
 

@@ -1,46 +1,44 @@
 set(ALLEGRO_SRC_FILES
         src/allegro.c
-        src/blit.c
-        src/bmp.c
-        src/colblend.c
-        src/color.c
         src/config.c
-        src/dataregi.c
-        src/digmid.c
-        src/dither.c
-        src/dispsw.c
-        src/file.c
-        src/fli.c
-        src/flood.c
-        src/gfx.c
-        src/glyph.c
-        src/graphics.c
-        src/gsprite.c
         src/inline.c
-        src/lbm.c
         src/libc.c
-        src/lzss.c
         src/math.c
-        src/midi.c
-        src/mixer.c
-        src/pcx.c
-        src/poly3d.c
-        src/polygon.c
-        src/quantize.c
-        src/readbmp.c
-        src/rotate.c
-        src/sound.c
-        src/spline.c
-        src/stream.c
-        src/tga.c
         src/timer.c
         src/unicode.c
+
+        src/file.c
+        src/lzss.c
+
+        src/readbmp.c
+        src/quantize.c
+        src/bmp.c
+        src/fli.c
+        src/pcx.c
+
+        src/blit.c
+        src/colblend.c
+        src/color.c
+        src/dispsw.c
+        src/dither.c
+        src/flood.c
+        src/gfx.c
+        src/graphics.c
+        src/polygon.c
+        src/rotate.c
         src/vtable.c
         src/vtable15.c
         src/vtable16.c
         src/vtable24.c
         src/vtable32.c
         src/vtable8.c
+
+        src/dataregi.c
+        src/digmid.c
+        src/midi.c
+        src/mixer.c
+        src/sound.c
+        src/stream.c
         )
 
 set(ALLEGRO_SRC_C_FILES

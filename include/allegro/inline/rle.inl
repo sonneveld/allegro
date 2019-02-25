@@ -26,41 +26,6 @@
 #endif
 
 
-AL_INLINE(void, draw_rle_sprite, (struct BITMAP *bmp, AL_CONST struct RLE_SPRITE *sprite, int x, int y),
-{
-   ASSERT(bmp);
-   ASSERT(sprite);
-   ASSERT(bmp->vtable->color_depth == sprite->color_depth);
-
-   bmp->vtable->draw_rle_sprite(bmp, sprite, x, y);
-})
-
-
-AL_INLINE(void, draw_trans_rle_sprite, (struct BITMAP *bmp, AL_CONST struct RLE_SPRITE *sprite, int x, int y),
-{
-   ASSERT(bmp);
-   ASSERT(sprite);
-
-   if (sprite->color_depth == 32) {
-      ASSERT(bmp->vtable->draw_trans_rgba_rle_sprite);
-      bmp->vtable->draw_trans_rgba_rle_sprite(bmp, sprite, x, y);
-   }
-   else {
-      ASSERT(bmp->vtable->color_depth == sprite->color_depth);
-      bmp->vtable->draw_trans_rle_sprite(bmp, sprite, x, y);
-   }
-})
-
-
-AL_INLINE(void, draw_lit_rle_sprite, (struct BITMAP *bmp, AL_CONST struct RLE_SPRITE *sprite, int x, int y, int color),
-{
-   ASSERT(bmp);
-   ASSERT(sprite);
-   ASSERT(bmp->vtable->color_depth == sprite->color_depth);
-
-   bmp->vtable->draw_lit_rle_sprite(bmp, sprite, x, y, color);
-})
-
 #ifdef __cplusplus
    }
 #endif

@@ -207,9 +207,7 @@ void _register_bitmap_file_type_init(void)
 		  "register_bitmap_file_type_exit");
 
    register_bitmap_file_type(uconvert_ascii("bmp", buf), load_bmp, save_bmp);
-   register_bitmap_file_type(uconvert_ascii("lbm", buf), load_lbm, NULL);
    register_bitmap_file_type(uconvert_ascii("pcx", buf), load_pcx, save_pcx);
-   register_bitmap_file_type(uconvert_ascii("tga", buf), load_tga, save_tga);
 }
 
 
