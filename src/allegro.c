@@ -308,10 +308,8 @@ static int _install_allegro(int system_id, int *errno_ptr, int (*atexit_ptr)(voi
    #ifndef ALLEGRO_USE_CONSTRUCTOR
       /* call constructor functions manually */
       extern void _midi_constructor();
-      extern void _mouse_constructor();
 
       _midi_constructor();
-      _mouse_constructor();
       _register_bitmap_file_type_init();
    #endif
 
