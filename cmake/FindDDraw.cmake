@@ -12,8 +12,8 @@ endif(DDRAW_INCLUDE_DIR)
 
 # Makes my life easier.
 if(MSVC)
-    set(HINT_INCLUDE "C:/Program Files/Microsoft DirectX SDK (August 2008)/Include")
-    set(HINT_LIB "C:/Program Files/Microsoft DirectX SDK (August 2008)/Lib")
+    set(HINT_INCLUDE "C:/Program Files (x86)/Microsoft DirectX SDK (August 2007)/Include")
+    set(HINT_LIB "C:/Program Files (x86)/Microsoft DirectX SDK (August 2007)/Lib")
 endif(MSVC)
 
 find_path(DDRAW_INCLUDE_DIR ddraw.h

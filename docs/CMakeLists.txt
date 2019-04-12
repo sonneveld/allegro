@@ -3,7 +3,7 @@
 # Documentation
 #
 
-option(WANT_DOCS "Generate documentation" on)
+option(WANT_DOCS "Generate documentation" off)
 if(NOT WANT_DOCS OR CMAKE_CROSSCOMPILING)
     return()
 endif()
@@ -155,7 +155,7 @@ endif(UNIX)
 # Man pages
 #
 
-option(WANT_DOCS_MAN "Generate man pages" on)
+option(WANT_DOCS_MAN "Generate man pages" off)
 set(MANDIR "man" CACHE STRING "Install man pages into this directory")
 
 if(WANT_DOCS_MAN)
@@ -184,7 +184,7 @@ endif(WANT_DOCS_MAN)
 # Info
 #
 
-option(WANT_DOCS_INFO "Generate Info document" on)
+option(WANT_DOCS_INFO "Generate Info document" off)
 find_program(MAKEINFO NAMES makeinfo)
 mark_as_advanced(MAKEINFO)
 set(INFODIR "info" CACHE STRING "Install Info docs into this directory")

@@ -95,7 +95,7 @@ include(Common)
 # Build options
 #
 
-option(SHARED "Build shared library for main Allegro library and addons" on)
+option(SHARED "Build shared library for main Allegro library and addons" off)
 set(BUILD_SHARED_LIBS ${SHARED})    # actual CMake variable
 
 # On some 64-bit platforms, libraries should be installed into `lib64'
@@ -106,14 +106,14 @@ option(MAGIC_MAIN "Enable magic main (Unix)" off)
 
 option(WANT_FRAMEWORKS "Want frameworks on Mac OS X" off)
 option(WANT_EMBED
-    "Make frameworks embeddable in application bundles (Mac OS X)" on)
+    "Make frameworks embeddable in application bundles (Mac OS X)" off)
 option(ENABLE_QUICKDRAW "Enable Quick Graphics on OS X" OFF)
 
 set(FRAMEWORK_INSTALL_PREFIX "/Library/Frameworks" CACHE STRING
     "Directory in which to install Mac OS X frameworks")
 
 if(MSVC)
-    option(STATIC_RUNTIME "Use the static MSVC runtime" off)
+    option(STATIC_RUNTIME "Use the static MSVC runtime" on)
 endif(MSVC)
 
 #-----------------------------------------------------------------------------#
@@ -406,7 +406,7 @@ set(ALLEGRO_NO_ASM 1)
 # Unix modules
 #
 
-option(WANT_MODULES "Use modules for drivers (Unix)" on)
+option(WANT_MODULES "Use modules for drivers (Unix)" off)
 
 if(WANT_MODULES AND ALLEGRO_UNIX)
     set(ALLEGRO_WITH_MODULES 1)
@@ -444,10 +444,10 @@ set(PLATFORM_LIBS_MODULES)      # only link with these if modules enabled
 
 # -- Unix --
 
-option(WANT_OSS "Build OSS support" on)
+option(WANT_OSS "Build OSS support" off)
 option(WANT_ALSA "Build ALSA support" on)
 option(WANT_JACK "Build JACK support" on)
-option(WANT_SGIAUDIO "Build SGI audio support" on)
+option(WANT_SGIAUDIO "Build SGI audio support" off)
 
 if(ALLEGRO_UNIX) # not MACOSX
     find_package(Threads)
@@ -584,10 +584,10 @@ endif(ALLEGRO_WITH_XWINDOWS)
 # -- Linux console --
 
 option(WANT_LINUX_CONSOLE "Want Linux console support (Linux)" off)
-option(WANT_LINUX_VGA "Want Linux console VGA driver (Linux)" on)
-option(WANT_LINUX_FBCON "Want Linux console fbcon driver (Linux)" on)
-option(WANT_LINUX_SVGALIB "Want Linux console SVGAlib driver (Linux)" on)
-option(WANT_LINUX_TSLIB "Want Linux console tslib mouse driver (Linux)" on)
+option(WANT_LINUX_VGA "Want Linux console VGA driver (Linux)" off)
+option(WANT_LINUX_FBCON "Want Linux console fbcon driver (Linux)" off)
+option(WANT_LINUX_SVGALIB "Want Linux console SVGAlib driver (Linux)" off)
+option(WANT_LINUX_TSLIB "Want Linux console tslib mouse driver (Linux)" off)
 
 if(WANT_LINUX_CONSOLE AND CMAKE_SYSTEM_NAME STREQUAL Linux)
     set(ALLEGRO_LINUX 1)
@@ -988,10 +988,10 @@ endif(UNIX)
 # Addons
 #
 
-option(WANT_ALLEGROGL "Enable AllegroGL" on)
-option(WANT_LOADPNG "Enable loadpng" on)
-option(WANT_LOGG "Enable logg" on)
-option(WANT_JPGALLEG "Enable JPGAlleg" on)
+option(WANT_ALLEGROGL "Enable AllegroGL" off)
+option(WANT_LOADPNG "Enable loadpng" off)
+option(WANT_LOGG "Enable logg" off)
+option(WANT_JPGALLEG "Enable JPGAlleg" off)
 
 if (BUILD_SHARED_LIBS)
     set(ADDON_LINKAGE SHARED)
@@ -1069,7 +1069,7 @@ add_subdirectory(docs)
 # Samples - after addons because skater can use AllegroGL
 #
 
-option(WANT_EXAMPLES "Build example programs" on)
+option(WANT_EXAMPLES "Build example programs" off)
 
 if(WANT_EXAMPLES)
     add_subdirectory(examples)
@@ -1082,7 +1082,7 @@ endif(WANT_EXAMPLES)
 # Tools - after addons because of grabber plugins
 #
 
-option(WANT_TOOLS "Build tool programs" on)
+option(WANT_TOOLS "Build tool programs" off)
 
 if(WANT_TOOLS)
     add_subdirectory(tools)
@@ -1097,7 +1097,7 @@ endif(WANT_TOOLS)
 # Tests
 #
 
-option(WANT_TESTS "Build test programs" on)
+option(WANT_TESTS "Build test programs" off)
 
 if(WANT_TESTS)
     add_subdirectory(tests)
