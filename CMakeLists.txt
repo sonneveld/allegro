@@ -313,6 +313,25 @@ if(PSP)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -G0 -fno-exceptions -fno-rtti")
 endif(PSP)
 
+if(IOS)
+    set(ALLEGRO_IOS_ARCH arm64 CACHE STRING "iOS Architecture")
+    set_property(CACHE ALLEGRO_IOS_ARCH PROPERTY STRINGS arm64 armv7 armv7s i386 x86_64)
+
+    set(ALLEGRO_IOS_SDK iphoneos CACHE STRING "iOS SDK")
+    set_property(CACHE ALLEGRO_IOS_SDK PROPERTY STRINGS iphoneos iphonesimulator)
+
+    execute_process(COMMAND xcrun --sdk ${ALLEGRO_IOS_SDK} --show-sdk-path
+        OUTPUT_VARIABLE SDK_PATH
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
+    set(IOS_ADDITIONAL_LIBRARY_PATH "$(pwd)/../../../nativelibs/${ALLEGRO_IOS_ARCH}")
+    set(IOS_PLATFORM_INCLUDE "${SDK_PATH}/usr/include")
+    set(IOS_PLATFORM_LIB "${SDK_PATH}/usr/lib")
+
+    set(ALLEGRO_IOS 1)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -arch ${ALLEGRO_IOS_ARCH} -I${IOS_PLATFORM_INCLUDE}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+endif(IOS)
+
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${WFLAGS} ${WFLAGS_C_ONLY}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WFLAGS} ${WFLAGS_CXX_ONLY}")
 
@@ -713,6 +732,14 @@ if(PSP)
     list(APPEND PLATFORM_LIBS
     m pspaudio pspgu psprtc pspdebug pspdisplay pspge pspctrl pspsdk c pspnet pspnet_inet pspnet_resolver psputility pspuser pspkernel)
 endif(PSP)
+
+# -- iOS --
+
+if(IOS)
+	include_directories(SYSTEM IOS_PLATFORM_INCLUDE "${SDK_PATH}/usr/include")
+	link_directories(IOS_PLATFORM_LIB)
+	list(APPEND PLATFORM_SOURCES ${ALLEGRO_SRC_IOS_FILES})
+endif(IOS)
 
 #-----------------------------------------------------------------------------#
 #

@@ -11,6 +11,7 @@
 #cmakedefine ALLEGRO_QNX
 #cmakedefine ALLEGRO_UNIX
 #cmakedefine ALLEGRO_WATCOM
+#cmakedefine ALLEGRO_IOS
 
 /* These are always defined now. */
 #define ALLEGRO_NO_ASM
