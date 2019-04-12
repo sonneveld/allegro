@@ -260,7 +260,8 @@ void _soft_triangle(BITMAP *bmp, int x1, int y1, int x2, int y2, int x3, int y3,
 {
    ASSERT(bmp);
 
-   #if (defined ALLEGRO_GCC) && (defined ALLEGRO_I386)
+   /* Disabling this as it horribly blows up on GCC 4.2 on OS X*/
+   #if 0 && (defined ALLEGRO_GCC) && (defined ALLEGRO_I386)
 
       /* note: this depends on a dodgy assumption about parameter passing 
        * conventions. I assume that the point coordinates are all on the 

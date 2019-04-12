@@ -8,33 +8,24 @@
  *                                           /\____/
  *                                           \_/__/
  *
- *      Main header file for the MacOS X Allegro library port.
- *      Any OS X Allegro specific function is declared here. 
+ *      Internal header file for the Android Allegro library port.
  *
- *      By Angelo Mottola.
+ *      By JJS for the Adventure Game Studio runtime port.
+ *      Based on the Allegro PSP port.
  *
  *      See readme.txt for copyright information.
  */
 
 
-#ifndef OSX_ALLEGRO_H
-#define OSX_ALLEGRO_H
+#ifndef AINTIOS_H
+#define AINTIOS_H
 
-#ifndef ALLEGRO_H
-#error Please include allegro.h before osxalleg.h!
-#endif
+AL_FUNC(void *, _ios_create_mutex, (void));
+AL_FUNC(void, _ios_destroy_mutex, (void *handle));
+AL_FUNC(void, _ios_lock_mutex, (void *handle));
+AL_FUNC(void, _ios_unlock_mutex, (void *handle));
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-// just a monotonically increasing number using `date '+%s'`
-#define MACOS_PORT_VERSION (1524488744L)
-
-#ifdef __cplusplus
-}
-#endif
+void ios_mouse_setup(int left, int right, int top, int bottom, float scaling_x, float scaling_y);
 
 #endif
 

@@ -107,6 +107,7 @@ option(MAGIC_MAIN "Enable magic main (Unix)" off)
 option(WANT_FRAMEWORKS "Want frameworks on Mac OS X" off)
 option(WANT_EMBED
     "Make frameworks embeddable in application bundles (Mac OS X)" on)
+option(ENABLE_QUICKDRAW "Enable Quick Graphics on OS X" OFF)
 
 set(FRAMEWORK_INSTALL_PREFIX "/Library/Frameworks" CACHE STRING
     "Directory in which to install Mac OS X frameworks")
@@ -331,6 +332,29 @@ if(PSP)
     set(CMAKE_INSTALL_PREFIX ${PSP_PREFIX})
 endif(PSP)
 
+if(IOS)
+    set(ALLEGRO_IOS_ARCH arm64 CACHE STRING "iOS Architecture")
+    set_property(CACHE ALLEGRO_IOS_ARCH PROPERTY STRINGS arm64 armv7 armv7s i386 x86_64)
+
+    set(ALLEGRO_IOS_SDK iphoneos CACHE STRING "iOS SDK")
+    set_property(CACHE ALLEGRO_IOS_SDK PROPERTY STRINGS iphoneos iphonesimulator)
+
+    execute_process(COMMAND xcrun --sdk ${ALLEGRO_IOS_SDK} --show-sdk-path
+        OUTPUT_VARIABLE SDK_PATH
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
+    set(IOS_ADDITIONAL_LIBRARY_PATH "$(pwd)/../../../nativelibs/${ALLEGRO_IOS_ARCH}")
+    set(IOS_PLATFORM_INCLUDE "${SDK_PATH}/usr/include")
+    set(IOS_PLATFORM_LIB "${SDK_PATH}/usr/lib")
+
+    set(ALLEGRO_IOS 1)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -arch ${ALLEGRO_IOS_ARCH} -I${IOS_PLATFORM_INCLUDE}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+endif(IOS)
+
+if(ANDROID)
+    set(ALLEGRO_ANDROID 1)
+endif(ANDROID)
+
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${WFLAGS} ${WFLAGS_C_ONLY}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WFLAGS} ${WFLAGS_CXX_ONLY}")
 
@@ -468,6 +492,15 @@ if(ALLEGRO_UNIX) # not MACOSX
             add_our_module(alleg-alsamidi src/unix/alsamidi.c ${ALSA_LIBRARIES})
         endif(ALSA_FOUND)
     endif(WANT_ALSA)
+
+    pkg_check_modules(SDL2 sdl2)
+    if(SDL2_FOUND)
+        set(ALLEGRO_WITH_SDL2DIGI 1)
+        include_directories(SYSTEM ${SDL2_INCLUDE_DIRS})
+        link_directories(${SDL2_LIBRARY_DIRS})
+        list(APPEND PLATFORM_LIBS_NON_MODULES ${SDL2_LIBRARIES})
+        add_our_module(alleg-sdl2digi src/unix/sdl2digi.c ${SDL2_LIBRARIES})
+    endif(SDL2_FOUND)
 
     if(WANT_JACK)
         pkg_check_modules(JACK jack)
@@ -655,29 +688,33 @@ endif(BEOS)
 
 if(ALLEGRO_MACOSX)
     list(APPEND PLATFORM_SOURCES ${ALLEGRO_SRC_MACOSX_FILES})
+    IF(ENABLE_QUICKDRAW)
+      SET_SOURCE_FILES_PROPERTIES(
+        ${ALLEGRO_SRC_MACOSX_FILES}
+        PROPERTIES
+            COMPILE_FLAGS ENABLE_QUICKDRAW
+      )
+    ENDIF()
     if(NOT SHARED)
 	list(APPEND PLATFORM_SOURCES src/macosx/main.m)
     endif(NOT SHARED)
 
     find_library(COCOA_LIBRARY Cocoa)
-    find_library(CARBON_LIBRARY Carbon)
     find_library(IOKIT_LIBRARY IOKit)
     find_library(COREAUDIO_LIBRARY CoreAudio)
     find_library(AUDIOUNIT_LIBRARY AudioUnit)
     find_library(AUDIOTOOLBOX_LIBRARY AudioToolbox)
-    find_package(QuickTime)
-    mark_as_advanced(COCOA_LIBRARY CARBON_LIBRARY IOKIT_LIBRARY)
+    find_library(OPENGL_LIBRARY OpenGL)
+    mark_as_advanced(COCOA_LIBRARY IOKIT_LIBRARY OPENGL_LIBRARY)
     mark_as_advanced(COREAUDIO_LIBRARY AUDIOUNIT_LIBRARY AUDIOTOOLBOX_LIBRARY)
-    mark_as_advanced(QUICKTIME_INCLUDE_DIR QUICKTIME_LIBRARY)
 
     list(APPEND PLATFORM_LIBS
 	${COCOA_LIBRARY}
-	${CARBON_LIBRARY}
 	${IOKIT_LIBRARY}
 	${COREAUDIO_LIBRARY}
 	${AUDIOUNIT_LIBRARY}
 	${AUDIOTOOLBOX_LIBRARY}
-	${QUICKTIME_LIBRARY}
+	${OPENGL_LIBRARY}
 	)
 endif(ALLEGRO_MACOSX)
 
@@ -690,6 +727,20 @@ if(PSP)
     list(APPEND PLATFORM_LIBS
     m pspaudio pspgu psprtc pspdebug pspdisplay pspge pspctrl pspsdk c pspnet pspnet_inet pspnet_resolver psputility pspuser pspkernel)
 endif(PSP)
+
+# -- iOS --
+
+if(IOS)
+	include_directories(SYSTEM IOS_PLATFORM_INCLUDE "${SDK_PATH}/usr/include")
+	link_directories(IOS_PLATFORM_LIB)
+	list(APPEND PLATFORM_SOURCES ${ALLEGRO_SRC_IOS_FILES})
+endif(IOS)
+
+# -- Android --
+
+if(ANDROID)
+	list(APPEND PLATFORM_SOURCES ${ALLEGRO_SRC_ANDROID_FILES})
+endif(ANDROID)
 
 #-----------------------------------------------------------------------------#
 #
@@ -910,7 +961,7 @@ if(UNIX) # including MACOSX
         if(BUILD_SHARED_LIBS)
             set(FRAMEWORKS "-framework Cocoa -framework Allegro -lalleg-main${BUILD_TYPE_SUFFIX}")
         else(BUILD_SHARED_LIBS)
-            set(FRAMEWORKS "-framework Cocoa -framework Allegro -lalleg-main${BUILD_TYPE_SUFFIX} -framework Carbon -framework IOKit -framework System -framework CoreAudio -framework AudioUnit -framework AudioToolbox -framework QuickTime")
+            set(FRAMEWORKS "-framework Cocoa -framework Allegro -lalleg-main${BUILD_TYPE_SUFFIX} -framework IOKit -framework System -framework CoreAudio -framework AudioUnit -framework AudioToolbox")
         endif(BUILD_SHARED_LIBS)
     else()
         set(ACCEPT_FRAMEWORKS no)

@@ -42,6 +42,7 @@
 #define OSX_GFX_NONE                    0
 #define OSX_GFX_WINDOW                  1
 #define OSX_GFX_FULL                    2
+#define OSX_GFX_GL                      3
 
 #define BMP_EXTRA(bmp)                  ((BMP_EXTRA_INFO *)((bmp)->extra))
 
@@ -60,7 +61,7 @@
 
 
 
-@interface AllegroAppDelegate : NSObject
+@interface AllegroAppDelegate : NSObject <NSApplicationDelegate>
 - (BOOL)application: (NSApplication *)theApplication openFile: (NSString *)filename;
 - (void)applicationDidFinishLaunching: (NSNotification *)aNotification;
 - (void)applicationDidChangeScreenParameters: (NSNotification *)aNotification;
@@ -71,21 +72,35 @@
 
 
 @interface AllegroWindow : NSWindow
+#ifdef ENABLE_QUICKDRAW
 - (void)display;
 - (void)miniaturize: (id)sender;
+#endif
+- (BOOL)canBecomeKeyWindow;
+- (BOOL)canBecomeMainWindow;
 @end
 
 
 @interface AllegroWindowDelegate : NSObject
 - (BOOL)windowShouldClose: (id)sender;
 - (void)windowDidDeminiaturize: (NSNotification *)aNotification;
+- (void)windowDidBecomeKey:(NSNotification *)notification;
+- (void)windowDidResignKey:(NSNotification *)notification;
+- (void)windowWillEnterFullScreen:(NSNotification *)notification;
+- (void)windowWillExitFullScreen:(NSNotification *)notification;
+- (void)windowDidBecomeMain:(NSNotification *)notification;
+- (void)windowDidResignMain:(NSNotification *)notification;
 @end
 
-
+#ifdef ENABLE_QUICKDRAW
 @interface AllegroView: NSQuickDrawView
 - (void)resetCursorRects;
 @end
+#endif
 
+// @interface AllegroCocoaGLView: NSOpenGLView
+// - (id) initWithFrame: (NSRect) frame windowed:(BOOL)windowed;
+// @end
 
 typedef void RETSIGTYPE;
 
@@ -129,7 +144,6 @@ typedef struct
 
 
 void osx_event_handler(void);
-int osx_bootstrap_ok(void);
 
 void setup_direct_shifts(void);
 void osx_init_fade_system(void);
@@ -160,6 +174,7 @@ void osx_mouse_move(int x, int y);
 HID_DEVICE_COLLECTION *osx_hid_scan(int type, HID_DEVICE_COLLECTION*);
 void osx_hid_free(HID_DEVICE_COLLECTION *);
 
+void runOnMainQueueWithoutDeadlocking(void (^block)(void));
 
 AL_VAR(NSBundle *, osx_bundle);
 AL_VAR(void *, osx_event_mutex);
@@ -173,7 +188,9 @@ AL_ARRAY(char, osx_window_title);
 AL_VAR(int, osx_window_first_expose);
 AL_VAR(int, osx_skip_events_processing);
 AL_VAR(void *, osx_skip_events_processing_mutex);
+#ifdef ENABLE_QUICKDRAW
 AL_VAR(CGDirectPaletteRef, osx_palette);
+#endif
 AL_VAR(int, osx_palette_dirty);
 AL_VAR(int, osx_mouse_warped);
 AL_VAR(int, osx_skip_mouse_move);

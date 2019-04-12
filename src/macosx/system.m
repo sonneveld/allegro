@@ -26,8 +26,6 @@
 
 #ifndef SCAN_DEPEND
 #include <CoreFoundation/CoreFoundation.h>
-#include <mach/mach_port.h>
-#include <servers/bootstrap.h>
 #endif
 
 
@@ -137,268 +135,310 @@ SYSTEM_DRIVER system_macosx =
 static RETSIGTYPE osx_signal_handler(int num)
 {
    _unix_unlock_mutex(osx_event_mutex);
-   _unix_unlock_mutex(osx_window_mutex);
-   
+
    allegro_exit();
-   
+
    _unix_destroy_mutex(osx_event_mutex);
-   _unix_destroy_mutex(osx_window_mutex);
-   
+
    fprintf(stderr, "Shutting down Allegro due to signal #%d\n", num);
    raise(num);
 }
 
 
-
-/* osx_event_handler:
- *  Event handling function; gets repeatedly called inside a dedicated thread.
- */
-void osx_event_handler()
+static void osx_scale_mouse(NSPointPointer position, const NSRectPointer window, const NSRectPointer view)
 {
-   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-   NSEvent *event;
+    // flip the vertical to top down
+    position->y = window->size.height - position->y;
+    if (!NSEqualSizes(window->size, view->size)) {
+        position->x = position->x / window->size.width * view->size.width;
+        position->y = position->y / window->size.height * view->size.height;
+    }
+}
+
+static NSPoint locationInView (NSEvent *event, NSView *inTermsOfView) {
+   NSPoint windowLocation;
+
+   NSWindow *viewWindow = [inTermsOfView window];
+
+   if (event) {
+      NSWindow *eventWindow = [event window];
+
+      if (eventWindow) {
+         if (eventWindow == viewWindow) {
+            windowLocation = [event locationInWindow];
+         } else {
+            // event from a completely different window.. convert to global and back to _our_ window
+            NSPoint globalLocation = [eventWindow convertBaseToScreen: windowLocation];
+            windowLocation = [viewWindow convertScreenToBase: globalLocation];
+         }
+      } else {
+         // if window is nil, then it's assumed to be screen coordinates.
+         NSPoint globalLocation = [event locationInWindow];
+         windowLocation = [viewWindow convertScreenToBase: globalLocation ];
+      }  
+   } else {
+      NSPoint globalLocation = [NSEvent mouseLocation];
+      windowLocation = [viewWindow convertScreenToBase: globalLocation ];
+   }
+
+   return [inTermsOfView convertPoint: windowLocation fromView: nil];
+}
+
+
+static BOOL cursor_hidden = NO;  // need to keep track because nscursor requires balanced hide/unhide
+static int dx = 0, dy = 0, dz = 0;
+static int mx=0;
+static int my=0;
+static int buttons = 0;
+
+void update_cursor() {
+   if (!_mouse_installed) { return; }
+   if (!_mouse_on) { return; }
+
+   NSPoint point;
+   NSRect frame, view;
+   view = NSMakeRect(0, 0, gfx_driver->w, gfx_driver->h);
+
+   point = NSMakePoint(0, 0);
+   if (osx_window) {
+      frame = [[osx_window contentView] frame];
+      point = locationInView (nil, [osx_window contentView]);
+   } else {
+      frame = [[NSScreen mainScreen] frame];
+   }
+   osx_scale_mouse(&point, &frame, &view);
+
+   if (NSPointInRect(point, view)) {
+
+      // hide the cursor because sometimes osx will reshow cursor for no reason
+      if (!cursor_hidden) {
+         [NSCursor hide];
+         cursor_hidden = YES;
+      } else {
+         // if dock is shown, having the mouse near the edge might show the cursor, so unhide/hide
+         [NSCursor unhide];
+         [NSCursor hide];
+      }
+      }
+}
+
+void osx_mouse_available() 
+{
+   if (!_mouse_installed) { return; }
+
+   NSPoint point;
+   NSRect frame, view;
+   view = NSMakeRect(0, 0, gfx_driver->w, gfx_driver->h);
+
+   point = NSMakePoint(0, 0);
+   if (osx_window) {
+      frame = [[osx_window contentView] frame];
+      point = locationInView (nil, [osx_window contentView]);
+   } else {
+      frame = [[NSScreen mainScreen] frame];
+   }
+   osx_scale_mouse(&point, &frame, &view);
+
+   if (NSPointInRect(point, view)) {
+
+      mx = point.x;
+      my = point.y;
+      buttons = 0;
+      _mouse_on = TRUE;
+
+      update_cursor();
+
+      osx_mouse_handler(mx, my, dx, dy, dz, buttons);
+   }
+}
+
+void osx_mouse_not_available()
+{
+   if (!_mouse_installed) { return; }
+
+   if (cursor_hidden) {
+      [NSCursor unhide];
+      cursor_hidden = NO;
+   }
+
+   _mouse_on = FALSE;
+
+   osx_mouse_handler(mx, my, dx, dy, dz, buttons);
+}
+
+void osx_add_event_monitor() {
+
+   [NSEvent addLocalMonitorForEventsMatchingMask:NSAnyEventMask handler:^NSEvent * (NSEvent *event) {
+
    NSDate *distant_past = [NSDate distantPast];
    NSPoint point;
    NSRect frame, view;
-   int dx = 0, dy = 0, dz = 0;
-   int mx=_mouse_x;
-   int my=_mouse_y;
-   static int buttons = 0;
+   dx = 0, dy = 0, dz = 0;
+   mx=_mouse_x;
+   my=_mouse_y;
    int event_type;
    BOOL gotmouseevent = NO;
-   
-   while ((event = [NSApp nextEventMatchingMask: NSAnyEventMask
-         untilDate: distant_past
-         inMode: NSDefaultRunLoopMode
-         dequeue: YES]) != nil)
-   {
-      _unix_lock_mutex(osx_skip_events_processing_mutex);
-      int skip_events_processing = osx_skip_events_processing;
-      _unix_unlock_mutex(osx_skip_events_processing_mutex);
+   static int alt_left_mouse_up_event = -1;
 
-      if ((skip_events_processing) || (osx_gfx_mode == OSX_GFX_NONE)) {
-         [NSApp sendEvent: event];
-	 continue;
-      }
-      
-      view = NSMakeRect(0, 0, gfx_driver->w, gfx_driver->h);
-      point = [event locationInWindow];
-      if (osx_window) 
-      {
-	 frame = [[osx_window contentView] frame];
-      }
-      else
-      {
-	 frame = [[NSScreen mainScreen] frame];
-      }
-      event_type = [event type];
-      switch (event_type) {
-	 
-         case NSKeyDown:
-	    if (_keyboard_installed)
-	       osx_keyboard_handler(TRUE, event);
-	    if ([event modifierFlags] & NSCommandKeyMask) 
-	       [NSApp sendEvent: event];
-	    break;
-	
-         case NSKeyUp:
-	    if (_keyboard_installed)
-	       osx_keyboard_handler(FALSE, event);
-	    if ([event modifierFlags] & NSCommandKeyMask) 
-	       [NSApp sendEvent: event];
-	    break;
+   _unix_lock_mutex(osx_skip_events_processing_mutex);
+   int skip_events_processing = osx_skip_events_processing;
+   _unix_unlock_mutex(osx_skip_events_processing_mutex);
 
-         case NSFlagsChanged:
-	    if (_keyboard_installed)
-	       osx_keyboard_modifiers([event modifierFlags]);
-	    break;
-	 
-         case NSLeftMouseDown:
-         case NSOtherMouseDown:
-         case NSRightMouseDown:
-	    if (![NSApp isActive]) {
-	       /* App is regaining focus */
-	       if (_mouse_installed) {
-	          if ((osx_window) && (NSPointInRect(point, view))) {
-                     mx = point.x;
-	             my = frame.size.height - point.y;
-		     buttons = 0;
-                     _mouse_on = TRUE;
-	          }
-	       }
-	       if (osx_window)
-                  [osx_window invalidateCursorRectsForView: [osx_window contentView]];
-	       if (_keyboard_installed)
-	          osx_keyboard_focused(TRUE, 0);
-	       _switch_in();
-	       gotmouseevent = YES;
-	       [NSApp sendEvent: event];
-	       break;
-	    }
-	    /* fallthrough */
-         case NSLeftMouseUp:
-         case NSOtherMouseUp:
-         case NSRightMouseUp:
-	    if (osx_emulate_mouse_buttons) {
-	       if (event_type == NSLeftMouseDown) {
-                  if ((!osx_window) || (NSPointInRect(point, view))) {
-		     buttons = 0x1;
-		     if (key[KEY_ALT])
-		        buttons = 0x4;
-		     if (key[KEY_LCONTROL])
-		        buttons = 0x2;
-		  }
-	       }
-	       else if (event_type == NSLeftMouseUp)
-	          buttons &= ~0x7;
-	    }
-	    else {
-	       if ((!osx_window) || (NSPointInRect(point, view))) {
-	          /* Deliver mouse downs only if cursor is on the window */
-	          buttons |= ((event_type == NSLeftMouseDown) ? 0x1 : 0);
-	          buttons |= ((event_type == NSRightMouseDown) ? 0x2 : 0);
-	          buttons |= ((event_type == NSOtherMouseDown) ? 0x4 : 0);
-	       }
-	       buttons &= ~((event_type == NSLeftMouseUp) ? 0x1 : 0);
-	       buttons &= ~((event_type == NSRightMouseUp) ? 0x2 : 0);
-	       buttons &= ~((event_type == NSOtherMouseUp) ? 0x4 : 0);
-	    }
-	    gotmouseevent = YES;
-	    [NSApp sendEvent: event];
-	    break;
-	    
-         case NSLeftMouseDragged:
-         case NSRightMouseDragged:
-         case NSOtherMouseDragged:
-         case NSMouseMoved:
-	    dx += [event deltaX];
-	    dy += [event deltaY];
-
-	    mx=point.x;
-	    my=frame.size.height-point.y;
-
-	    [NSApp sendEvent: event];
-	    gotmouseevent = YES;
-	    break;
-            
-         case NSScrollWheel:
-	    dz += [event deltaY];
-	    gotmouseevent = YES;
-            break;
-	    
-	 case NSMouseEntered:
-	    if (([event trackingNumber] == osx_mouse_tracking_rect) && ([NSApp isActive])) {
-	       if (_mouse_installed) {
-		  mx = point.x;
-	          my = frame.size.height - point.y;
-		  buttons = 0;
-                  _mouse_on = TRUE;
-		  gotmouseevent = YES;
-	       }
-	    }
-	    [NSApp sendEvent: event];
-	    break;
-            
-	 case NSMouseExited:
-	    if ([event trackingNumber] == osx_mouse_tracking_rect) {
-	       if (_mouse_installed) {
-	          _mouse_on = FALSE;
-		  gotmouseevent = YES;
-	       }
-	    }
-            [NSApp sendEvent: event];
-	    break;
-            
-	 case NSAppKitDefined:
-            switch ([event subtype]) {
-               case NSApplicationActivatedEventType:
-	          if (osx_window) {
-		     [osx_window invalidateCursorRectsForView: [osx_window contentView]];
-                     if (_keyboard_installed)
-	                osx_keyboard_focused(TRUE, 0);
-		  }
-		  _switch_in();
-                  break;
-		  
-               case NSApplicationDeactivatedEventType:
-		  if (osx_window && _keyboard_installed)
-		     osx_keyboard_focused(FALSE, 0);
-		  _switch_out();
-                  break;
-	       
-	       case NSWindowMovedEventType:
-                  /* This is needed to ensure the shadow gets drawn when the window is
-		   * created. It's weird, but when the window is created on another
-		   * thread, sometimes its shadow doesn't get drawn. The same applies
-		   * to the cursor rectangle, which doesn't seem to be set at window
-		   * creation (it works once you move the mouse though).
-		   */
-	          if ((osx_window) && (osx_window_first_expose)) {
-		     osx_window_first_expose = FALSE;
-                     [osx_window setHasShadow: NO];
-                     [osx_window setHasShadow: YES];
-		     [osx_window invalidateCursorRectsForView: [osx_window contentView]];
-		  }
-		  break;
-	    }
-            [NSApp sendEvent: event];
-            break;
-	 
-	 default:
-	    [NSApp sendEvent: event];
-	    break;
-      }
+   if ((skip_events_processing) || (osx_gfx_mode == OSX_GFX_NONE)) {
+      return event;
    }
-   if (gotmouseevent == YES)
+
+   view = NSMakeRect(0, 0, gfx_driver->w, gfx_driver->h);
+
+   point = NSMakePoint(0, 0);
+   if (osx_window) {
+      frame = [[osx_window contentView] frame];
+      point = locationInView (event, [osx_window contentView]);
+   } else {
+      frame = [[NSScreen mainScreen] frame];
+   }
+   osx_scale_mouse(&point, &frame, &view);
+
+   event_type = [event type];
+   switch (event_type) {
+
+      case NSKeyDown:
+         if (_keyboard_installed) {
+            osx_keyboard_handler(TRUE, event);
+         }
+         if (! ([event modifierFlags] & NSCommandKeyMask) )
+         {
+            event = nil;
+         }
+         break;
+
+
+      case NSKeyUp:
+         if (_keyboard_installed) {
+            osx_keyboard_handler(FALSE, event);
+         }
+         if (! ([event modifierFlags] & NSCommandKeyMask) )
+         {
+            event = nil;
+         }
+         break;
+
+      case NSFlagsChanged:
+         if (_keyboard_installed) {
+            osx_keyboard_modifiers([event modifierFlags]);
+         }
+         event = nil;
+         break;
+
+      case NSLeftMouseDown:
+      case NSOtherMouseDown:
+      case NSRightMouseDown:
+         if (![NSApp isActive]) {
+            /* App is regaining focus */
+            if (_mouse_installed) {
+               if ((osx_window) && (NSPointInRect(point, view))) {
+                  mx = point.x;
+                  my = point.y;
+                  buttons = 0;
+                  alt_left_mouse_up_event = -1;
+                  _mouse_on = TRUE;
+               }
+            }
+            if (_keyboard_installed)
+               osx_keyboard_focused(TRUE, 0);
+            _switch_in();
+            gotmouseevent = YES;
+            break;
+         }
+         /* fallthrough */
+      case NSLeftMouseUp:
+      case NSOtherMouseUp:
+      case NSRightMouseUp:
+         {
+            int mouse_event_type = event_type;
+
+            if (mouse_event_type == NSLeftMouseDown) {
+               //  TODO: if mouse down but hasn't clearned alt-mouse.. keep with the alt.
+               if (osx_emulate_mouse_buttons) {
+                  if (key[KEY_ALT]) {
+                     mouse_event_type = NSOtherMouseDown;
+                     alt_left_mouse_up_event = NSOtherMouseUp;
+                  }
+                  if (key[KEY_LCONTROL]) {
+                     mouse_event_type = NSRightMouseDown;
+                     alt_left_mouse_up_event = NSRightMouseUp;
+                  }
+               }
+            }
+
+            if ((mouse_event_type == NSLeftMouseUp) && (alt_left_mouse_up_event >= 0)) {
+               mouse_event_type = alt_left_mouse_up_event;
+               alt_left_mouse_up_event = -1;
+            }
+
+            if ((!osx_window) || (NSPointInRect(point, view))) {
+               /* Deliver mouse downs only if cursor is on the window */
+               buttons |= ((mouse_event_type == NSLeftMouseDown) ? 0x1 : 0);
+               buttons |= ((mouse_event_type == NSRightMouseDown) ? 0x2 : 0);
+               buttons |= ((mouse_event_type == NSOtherMouseDown) ? 0x4 : 0);
+            }
+            buttons &= ~((mouse_event_type == NSLeftMouseUp) ? 0x1 : 0);
+            buttons &= ~((mouse_event_type == NSRightMouseUp) ? 0x2 : 0);
+            buttons &= ~((mouse_event_type == NSOtherMouseUp) ? 0x4 : 0);
+
+            gotmouseevent = YES;
+         }
+         break;
+
+      case NSLeftMouseDragged:
+      case NSRightMouseDragged:
+      case NSOtherMouseDragged:
+      case NSMouseMoved:
+
+         // a bit dodgy but hide mouse cursor 
+         update_cursor();
+
+         dx += [event deltaX];
+         dy += [event deltaY];
+
+         mx=point.x;
+         my=point.y;
+
+         gotmouseevent = YES;
+         break;
+
+      case NSScrollWheel:
+         dz += [event deltaY];
+         gotmouseevent = YES;
+         break;
+
+      case NSMouseEntered:
+         if (([event trackingNumber] == osx_mouse_tracking_rect) && ([NSApp isActive])) {
+            osx_mouse_available();
+            return event;  // return immediately since osx_mouse_available will call handler.
+         }
+         break;
+
+      case NSMouseExited:
+         if ([event trackingNumber] == osx_mouse_tracking_rect) {
+            osx_mouse_not_available();
+            return event;  // return immediately since osx_mouse_available will call handler.
+         }
+         break;
+
+      default:
+         break;
+   }
+
+   if (gotmouseevent == YES) {
       osx_mouse_handler(mx, my, dx, dy, dz, buttons);
-   [pool release];
+   }
+
+   return event;
+
+   }];
+
 }
-
-
-
-/* osx_tell_dock:
- *  Tell the dock about us; the origins of this hack are unknown, but it's
- *  currently the only way to make a Cocoa app to work when started from a
- *  console.
- *  For the future, (10.3 and above) investigate TranformProcessType in the 
- *  HIServices framework.
- */
-static void osx_tell_dock(void)
-{
-   struct CPSProcessSerNum psn;
-
-   if ((!CPSGetCurrentProcess(&psn)) &&
-       (!CPSEnableForegroundOperation(&psn, 0x03, 0x3C, 0x2C, 0x1103)) &&
-       (!CPSSetFrontProcess(&psn)))
-      [NSApplication sharedApplication];
-}
-
-
-
-/* osx_bootstrap_ok:
- *  Check if the current bootstrap context is privilege. If it's not, we can't
- *  use NSApplication, and instead have to go directly to main.
- *  Returns 1 if ok, 0 if not.
- */
-int osx_bootstrap_ok(void)
-{
-   static int _ok = -1;
-   mach_port_t bp;
-   kern_return_t ret;
-   CFMachPortRef cfport;
-
-   /* If have tested once, just return that answer */
-   if (_ok >= 0)
-      return _ok;
-   cfport = CFMachPortCreate(NULL, NULL, NULL, NULL);
-   task_get_bootstrap_port(mach_task_self(), &bp);
-   ret = bootstrap_register(bp, "bootstrap-ok-test", CFMachPortGetPort(cfport));
-   CFRelease(cfport);
-   _ok = (ret == KERN_SUCCESS) ? 1 : 0;
-   return _ok;
-}
-
-
 
 /* osx_sys_init:
  *  Initalizes the MacOS X system driver.
@@ -406,11 +446,6 @@ int osx_bootstrap_ok(void)
 static int osx_sys_init(void)
 {
    long result;
-   
-   /* If we're in the 'dead bootstrap' environment, the Mac driver won't work. */
-   if (!osx_bootstrap_ok()) {
-      return -1;
-   }
 
    /* Install emergency-exit signal handlers */
    old_sig_abrt = signal(SIGABRT, osx_signal_handler);
@@ -420,21 +455,15 @@ static int osx_sys_init(void)
    old_sig_term = signal(SIGTERM, osx_signal_handler);
    old_sig_int  = signal(SIGINT,  osx_signal_handler);
    old_sig_quit = signal(SIGQUIT, osx_signal_handler);
-   
-    
 
-   if (osx_bundle == NULL) {
-       /* If in a bundle, the dock will recognise us automatically */
-       osx_tell_dock();
-   }
-   
+
    /* Setup OS type & version */
    os_type = OSTYPE_MACOSX;
    Gestalt(gestaltSystemVersion, &result);
    os_version = (((result >> 12) & 0xf) * 10) + ((result >> 8) & 0xf);
    os_revision = (result >> 4) & 0xf;
    os_multitasking = TRUE;
-   
+
    /* Setup a blank cursor */
    cursor_data = calloc(1, 16 * 16 * 4);
    cursor_rep = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes: &cursor_data
@@ -595,10 +624,17 @@ static int osx_sys_set_display_switch_mode(int mode)
  */
 static void osx_sys_get_gfx_safe_mode(int *driver, struct GFX_MODE *mode)
 {
+#ifdef ENABLE_QUICKDRAW
    *driver = GFX_QUARTZ_WINDOW;
    mode->width = 320;
    mode->height = 200;
    mode->bpp = 8;
+#else
+   *driver = GFX_COCOAGL_WINDOW;
+   mode->width = 640;
+   mode->height = 480;
+   mode->bpp = 32;
+#endif
 }
 
 
@@ -608,13 +644,10 @@ static void osx_sys_get_gfx_safe_mode(int *driver, struct GFX_MODE *mode)
  */
 static int osx_sys_desktop_color_depth(void)
 {
-   CFDictionaryRef mode = NULL;
    int color_depth;
    
-   mode = CGDisplayCurrentMode(kCGDirectMainDisplay);
-   if (!mode)
-      return -1;
-   CFNumberGetValue(CFDictionaryGetValue(mode, kCGDisplayBitsPerPixel), kCFNumberSInt32Type, &color_depth);
+   NSWindowDepth depth = [[NSScreen mainScreen] depth];
+   color_depth = NSBitsPerPixelFromDepth(depth);
    
    return color_depth == 16 ? 15 : color_depth;
 }
@@ -625,13 +658,9 @@ static int osx_sys_desktop_color_depth(void)
  */
 static int osx_sys_get_desktop_resolution(int *width, int *height)
 {
-   CFDictionaryRef mode = NULL;
-   
-   mode = CGDisplayCurrentMode(kCGDirectMainDisplay);
-   if (!mode)
-      return -1;
-   CFNumberGetValue(CFDictionaryGetValue(mode, kCGDisplayWidth), kCFNumberSInt32Type, width);
-   CFNumberGetValue(CFDictionaryGetValue(mode, kCGDisplayHeight), kCFNumberSInt32Type, height);
-   
-   return 0;
+   NSRect r = [[NSScreen mainScreen] frame];
+   *width = r.size.width;
+   *height = r.size.height;
+
+    return 0;
 }

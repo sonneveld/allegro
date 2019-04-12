@@ -66,6 +66,8 @@ AL_ARRAY(char, allegro_error);
 #define OSTYPE_MACOS       AL_ID('M','A','C',' ')
 #define OSTYPE_MACOSX      AL_ID('M','A','C','X')
 #define OSTYPE_PSP         AL_ID('K','P','S','P')
+#define OSTYPE_IOS         AL_ID('I','O','S',' ')
+#define OSTYPE_ANDROID     AL_ID('A','N','D',' ')
 
 AL_VAR(int, os_type);
 AL_VAR(int, os_version);

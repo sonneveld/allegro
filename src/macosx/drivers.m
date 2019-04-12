@@ -47,20 +47,22 @@ _DRIVER_INFO _mouse_driver_list[] =
 
 
 BEGIN_GFX_DRIVER_LIST
+#ifdef ENABLE_QUICKDRAW
 {   GFX_QUARTZ_FULLSCREEN,    &gfx_quartz_full,         TRUE  },
 {   GFX_QUARTZ_WINDOW,        &gfx_quartz_window,       TRUE  },
+#endif
+{   GFX_COCOAGL_WINDOW,       &gfx_cocoagl_window,      TRUE  },
+{   GFX_COCOAGL_FULLSCREEN,   &gfx_cocoagl_full,        TRUE  },
 END_GFX_DRIVER_LIST
 
 
 BEGIN_DIGI_DRIVER_LIST
 {   DIGI_CORE_AUDIO,          &digi_core_audio,         TRUE  },
-{   DIGI_SOUND_MANAGER,       &digi_sound_manager,      TRUE  },
 END_DIGI_DRIVER_LIST
 
 
 BEGIN_MIDI_DRIVER_LIST
 {   MIDI_CORE_AUDIO,          &midi_core_audio,         TRUE  },
-{   MIDI_QUICKTIME,           &midi_quicktime,          TRUE  },
 END_MIDI_DRIVER_LIST
 
 

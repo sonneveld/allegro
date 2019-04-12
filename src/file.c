@@ -35,7 +35,7 @@
    #include <sys/stat.h>
 #endif
 
-#ifdef ALLEGRO_UNIX
+#if defined (ALLEGRO_UNIX) || defined (ALLEGRO_MACOSX)
    #include <pwd.h>                 /* for tilde expansion */
 #endif
 
@@ -174,7 +174,7 @@ char *canonicalize_filename(char *dest, AL_CONST char *filename, int size)
 
    #endif
 
-   #ifdef ALLEGRO_UNIX
+   #if defined (ALLEGRO_UNIX) || defined (ALLEGRO_MACOSX)
 
       /* if the filename starts with ~ then it's relative to a home directory */
       if ((ugetc(filename) == '~')) {
@@ -256,7 +256,7 @@ char *canonicalize_filename(char *dest, AL_CONST char *filename, int size)
       pos = ustrsize(buf);
    }
 
- #ifdef ALLEGRO_UNIX
+ #if defined (ALLEGRO_UNIX) || defined (ALLEGRO_MACOSX)
    no_relativisation:
  #endif
 

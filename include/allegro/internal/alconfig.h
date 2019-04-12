@@ -62,6 +62,10 @@
       #include "allegro/platform/alucfg.h"
    #elif defined ALLEGRO_PSP
       #include "allegro/platform/alpspcfg.h"
+   #elif defined ALLEGRO_IOS
+      #include "allegro/platform/alioscfg.h"
+   #elif defined ALLEGRO_ANDROID
+      #include "allegro/platform/alandcfg.h"
    #else
       #error platform not supported
    #endif

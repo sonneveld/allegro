@@ -307,13 +307,11 @@ set(ALLEGRO_SRC_MACOSX_FILES
         src/macosx/hidman.m
         src/macosx/keybd.m
         src/macosx/pcpu.m
-        src/macosx/qtmidi.m
         src/macosx/quartz.m
-        src/macosx/qzfull.m
         src/macosx/qzmouse.m
-        src/macosx/qzwindow.m
-        src/macosx/soundman.m
         src/macosx/system.m
+        src/macosx/cocoagl.m
+        src/macosx/cocoashared.m
         src/unix/ufile.c
         src/unix/utimer.c
         src/unix/uptimer.c
@@ -334,6 +332,33 @@ set(ALLEGRO_SRC_PSP_FILES
         src/psp/pvram.c
         src/psp/pvtable8.c
         )
+
+set(ALLEGRO_SRC_IOS_FILES
+        src/ios/idrivers.c
+        src/ios/isound.c
+        src/ios/ifile.c
+        src/ios/igfx.c
+        src/ios/ikey.c
+        src/ios/isystem.c
+        src/ios/imouse.c
+        src/ios/itimer.c
+        src/ios/ithreads.c
+        src/misc/colconv.c
+        )
+
+set(ALLEGRO_SRC_ANDROID_FILES
+        src/android/adrivers.c
+        src/android/asound.c
+        src/android/afile.c
+        src/android/agfx.c
+        src/android/akey.c
+        src/android/asystem.c
+        src/android/amouse.c
+        src/android/ajni.c
+        src/android/atimer.c
+        src/misc/colconv.c
+        )
+
 
 set(ALLEGRO_INCLUDE_ALLEGRO_FILES
         include/allegro/3d.h
@@ -400,6 +425,8 @@ set(ALLEGRO_INCLUDE_ALLEGRO_PLATFORM_FILES
         include/allegro/platform/aintmac.h
         include/allegro/platform/aintosx.h
         include/allegro/platform/aintpsp.h
+        include/allegro/platform/aintios.h
+        include/allegro/platform/aintand.h
         include/allegro/platform/aintqnx.h
         include/allegro/platform/aintunix.h
         include/allegro/platform/aintwin.h
@@ -421,6 +448,10 @@ set(ALLEGRO_INCLUDE_ALLEGRO_PLATFORM_FILES
         # include/allegro/platform/alplatf.h.cmake
         include/allegro/platform/alpsp.h
         include/allegro/platform/alpspcfg.h
+        include/allegro/platform/alios.h
+        include/allegro/platform/alioscfg.h
+        include/allegro/platform/aland.h
+        include/allegro/platform/alandcfg.h
         include/allegro/platform/alqnx.h
         include/allegro/platform/alqnxcfg.h
         include/allegro/platform/alucfg.h

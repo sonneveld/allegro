@@ -103,7 +103,7 @@ void osx_mouse_handler(int ax, int ay, int x, int y, int z, int buttons)
 
    if (osx_cursor != current_cursor) {
       if (osx_window) {
-         NSView* vw = [osx_window contentView];
+         NSView *vw = [osx_window contentView];
          [osx_window invalidateCursorRectsForView: vw];
       }
       else {
@@ -211,8 +211,7 @@ static void osx_mouse_exit(void)
 static void osx_mouse_position(int x, int y)
 {
    CGPoint point;
-   NSRect frame;
-   int screen_height;
+   NSRect frame, screen_frame;
    
    _unix_lock_mutex(osx_event_mutex);
    
@@ -220,13 +219,19 @@ static void osx_mouse_position(int x, int y)
    _mouse_y = point.y = y;
    
    if (osx_window) {
-      CFNumberGetValue(CFDictionaryGetValue(CGDisplayCurrentMode(kCGDirectMainDisplay), kCGDisplayHeight), kCFNumberSInt32Type, &screen_height);
+      screen_frame = [[NSScreen mainScreen] frame];
       frame = [osx_window frame];
+      // scale position
+      point.x *= (frame.size.width / gfx_driver->w);
+      point.y *= (frame.size.height / gfx_driver->h);
+
       point.x += frame.origin.x;
-      point.y += (screen_height - (frame.origin.y + gfx_driver->h));
+      point.y += (screen_frame.size.height - (frame.origin.y + frame.size.height));
    }
-   
-   CGDisplayMoveCursorToPoint(kCGDirectMainDisplay, point);
+
+   if (osx_gfx_mode != OSX_GFX_NONE) {
+      CGDisplayMoveCursorToPoint(kCGDirectMainDisplay, point);
+   }
    
    mymickey_x = mymickey_y = 0;
    osx_mouse_warped = TRUE;
@@ -274,19 +279,12 @@ int osx_mouse_set_sprite(BITMAP *sprite, int x, int y)
 {
    int ix, iy;
    int sw, sh;
-   
+
    if (!sprite)
       return -1;
    sw = sprite->w;
    sh = sprite->h;
-   if (floor(NSAppKitVersionNumber) <= NSAppKitVersionNumber10_2) {
-      // Before MacOS X 10.3, NSCursor can handle only 16x16 cursor sprites
-      // Pad to 16x16 or fail if the sprite is already larger.
-      if (sw>16 || sh>16)
-         return -1;
-      sh = sw = 16;
-   }
-   
+
    // Delete the old cursor (OK to send a message to nil)
    [cursor release];
 
