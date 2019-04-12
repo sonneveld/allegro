@@ -332,6 +332,10 @@ if(IOS)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 endif(IOS)
 
+if(ANDROID)
+    set(ALLEGRO_ANDROID 1)
+endif(ANDROID)
+
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${WFLAGS} ${WFLAGS_C_ONLY}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WFLAGS} ${WFLAGS_CXX_ONLY}")
 
@@ -740,6 +744,12 @@ if(IOS)
 	link_directories(IOS_PLATFORM_LIB)
 	list(APPEND PLATFORM_SOURCES ${ALLEGRO_SRC_IOS_FILES})
 endif(IOS)
+
+# -- Android --
+
+if(ANDROID)
+	list(APPEND PLATFORM_SOURCES ${ALLEGRO_SRC_ANDROID_FILES})
+endif(ANDROID)
 
 #-----------------------------------------------------------------------------#
 #
