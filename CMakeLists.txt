@@ -107,6 +107,7 @@ option(MAGIC_MAIN "Enable magic main (Unix)" off)
 option(WANT_FRAMEWORKS "Want frameworks on Mac OS X" off)
 option(WANT_EMBED
     "Make frameworks embeddable in application bundles (Mac OS X)" on)
+option(ENABLE_QUICKDRAW "Enable Quick Graphics on OS X" OFF)
 
 set(FRAMEWORK_INSTALL_PREFIX "/Library/Frameworks" CACHE STRING
     "Directory in which to install Mac OS X frameworks")
@@ -664,29 +665,33 @@ endif(BEOS)
 
 if(ALLEGRO_MACOSX)
     list(APPEND PLATFORM_SOURCES ${ALLEGRO_SRC_MACOSX_FILES})
+    IF(ENABLE_QUICKDRAW)
+      SET_SOURCE_FILES_PROPERTIES(
+        ${ALLEGRO_SRC_MACOSX_FILES}
+        PROPERTIES
+            COMPILE_FLAGS ENABLE_QUICKDRAW
+      )
+    ENDIF()
     if(NOT SHARED)
 	list(APPEND PLATFORM_SOURCES src/macosx/main.m)
     endif(NOT SHARED)
 
     find_library(COCOA_LIBRARY Cocoa)
-    find_library(CARBON_LIBRARY Carbon)
     find_library(IOKIT_LIBRARY IOKit)
     find_library(COREAUDIO_LIBRARY CoreAudio)
     find_library(AUDIOUNIT_LIBRARY AudioUnit)
     find_library(AUDIOTOOLBOX_LIBRARY AudioToolbox)
-    find_package(QuickTime)
-    mark_as_advanced(COCOA_LIBRARY CARBON_LIBRARY IOKIT_LIBRARY)
+    find_library(OPENGL_LIBRARY OpenGL)
+    mark_as_advanced(COCOA_LIBRARY IOKIT_LIBRARY OPENGL_LIBRARY)
     mark_as_advanced(COREAUDIO_LIBRARY AUDIOUNIT_LIBRARY AUDIOTOOLBOX_LIBRARY)
-    mark_as_advanced(QUICKTIME_INCLUDE_DIR QUICKTIME_LIBRARY)
 
     list(APPEND PLATFORM_LIBS
 	${COCOA_LIBRARY}
-	${CARBON_LIBRARY}
 	${IOKIT_LIBRARY}
 	${COREAUDIO_LIBRARY}
 	${AUDIOUNIT_LIBRARY}
 	${AUDIOTOOLBOX_LIBRARY}
-	${QUICKTIME_LIBRARY}
+	${OPENGL_LIBRARY}
 	)
 endif(ALLEGRO_MACOSX)
 
@@ -914,7 +919,7 @@ if(UNIX) # including MACOSX
         if(BUILD_SHARED_LIBS)
             set(FRAMEWORKS "-framework Cocoa -framework Allegro -lalleg-main${BUILD_TYPE_SUFFIX}")
         else(BUILD_SHARED_LIBS)
-            set(FRAMEWORKS "-framework Cocoa -framework Allegro -lalleg-main${BUILD_TYPE_SUFFIX} -framework Carbon -framework IOKit -framework System -framework CoreAudio -framework AudioUnit -framework AudioToolbox -framework QuickTime")
+            set(FRAMEWORKS "-framework Cocoa -framework Allegro -lalleg-main${BUILD_TYPE_SUFFIX} -framework IOKit -framework System -framework CoreAudio -framework AudioUnit -framework AudioToolbox")
         endif(BUILD_SHARED_LIBS)
     else()
         set(ACCEPT_FRAMEWORKS no)

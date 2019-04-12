@@ -395,6 +395,16 @@ static void repeat_timer(void)
 END_OF_STATIC_FUNCTION(repeat_timer);
 
 
+// for cocoa keyboard handling
+void _hack_stop_keyboard_repeat()
+{
+   if (repeat_key >= 0) {
+      remove_int(repeat_timer);
+      repeat_key = -1;
+      repeat_scan = -1;
+   }
+}
+
 
 /* install_keyboard_hooks:
  *  You should only use this function if you *aren't* using the rest of the

@@ -34,9 +34,10 @@ extern char **__crt0_argv;
 extern void *_mangled_main_address;
 
 static char *arg0, *arg1 = NULL;
-static int refresh_rate = 70;
 
 static volatile BOOL ready_to_terminate = NO;
+
+extern void osx_add_event_monitor();
 
 static BOOL in_bundle(void)
 {
@@ -48,11 +49,14 @@ static BOOL in_bundle(void)
    FSCatalogInfo processInfo;
    GetProcessBundleLocation(&psn, &processRef);
    FSGetCatalogInfo(&processRef, kFSCatInfoNodeFlags, &processInfo, NULL, NULL, NULL);
-   if (processInfo.nodeFlags & kFSNodeIsDirectoryMask) 
+   if (processInfo.nodeFlags & kFSNodeIsDirectoryMask)
      return YES;
    else
      return NO;
 }
+
+@interface AllegroAppDelegate ()
+@end
 
 @implementation AllegroAppDelegate
 
@@ -63,14 +67,13 @@ static BOOL in_bundle(void)
 }
 
 
-
 /* applicationDidFinishLaunching:
  *  Called when the app is ready to run. This runs the system events pump and
  *  updates the app window if it exists.
  */
 - (void)applicationDidFinishLaunching: (NSNotification *)aNotification
 {
-   NSAutoreleasePool *pool = NULL;
+
    CFDictionaryRef mode;
    NSString* exename, *resdir;
    NSFileManager* fm;
@@ -79,9 +82,8 @@ static BOOL in_bundle(void)
    /* create mutex */
    osx_event_mutex = _unix_create_mutex();
    osx_skip_events_processing_mutex = _unix_create_mutex();
-   
-   pool = [[NSAutoreleasePool alloc] init];
-   if (in_bundle() == YES)   
+
+   if (in_bundle() == YES)
    {
       /* In a bundle, so chdir to the containing directory,
        * or to the 'magic' resource directory if it exists.
@@ -92,7 +94,7 @@ static BOOL in_bundle(void)
       resdir = [[osx_bundle resourcePath] stringByAppendingPathComponent: exename];
       fm = [NSFileManager defaultManager];
       if ([fm fileExistsAtPath: resdir isDirectory: &isDir] && isDir) {
-          /* Yes, it exists inside the bundle */
+           // Yes, it exists inside the bundle
           [fm changeCurrentDirectoryPath: resdir];
       }
       else {
@@ -106,10 +108,10 @@ static BOOL in_bundle(void)
       arg0 = strdup([[osx_bundle bundlePath] fileSystemRepresentation]);
       if (arg1) {
          static char *args[2];
-	 args[0] = arg0;
-	 args[1] = arg1;
-	 __crt0_argv = args;
-	 __crt0_argc = 2;
+         args[0] = arg0;
+         args[1] = arg1;
+         __crt0_argv = args;
+         __crt0_argc = 2;
       }
       else {
          __crt0_argv = &arg0;
@@ -117,57 +119,19 @@ static BOOL in_bundle(void)
       }
    }
    /* else: not in a bundle so don't chdir */
-   
-   mode = CGDisplayCurrentMode(kCGDirectMainDisplay);
-   CFNumberGetValue(CFDictionaryGetValue(mode, kCGDisplayRefreshRate), kCFNumberSInt32Type, &refresh_rate);
-   if (refresh_rate <= 0)
-      refresh_rate = 70;
-   
+
+    osx_add_event_monitor();
+
    [NSThread detachNewThreadSelector: @selector(app_main:)
       toTarget: [AllegroAppDelegate class]
       withObject: nil];
-   
-   while (!ready_to_terminate) {
-      if (osx_gfx_mode == OSX_GFX_WINDOW)
-         osx_update_dirty_lines();
-      _unix_lock_mutex(osx_event_mutex);
-      if (osx_gfx_mode == OSX_GFX_FULL) {
-         if ((osx_palette) && (osx_palette_dirty)) {
-            CGDisplaySetPalette(kCGDirectMainDisplay, osx_palette);
-	    osx_palette_dirty = FALSE;
-	 }
-      }
-      osx_event_handler();
-      _unix_unlock_mutex(osx_event_mutex);
-      usleep(1000000 / refresh_rate);
-   }
-   
-   [pool release];
-   _unix_destroy_mutex(osx_event_mutex);
-
-   [NSApp terminate:self];
 }
-
-
 
 /* applicationDidChangeScreenParameters:
  *  Invoked when the screen did change resolution/color depth.
  */
 - (void)applicationDidChangeScreenParameters: (NSNotification *)aNotification
 {
-   CFDictionaryRef mode;
-   int new_refresh_rate;
-   
-   if ((osx_window) && (osx_gfx_mode == OSX_GFX_WINDOW)) 
-   {
-      osx_setup_colorconv_blitter();
-      [osx_window display];
-   }
-   mode = CGDisplayCurrentMode(kCGDirectMainDisplay);
-   CFNumberGetValue(CFDictionaryGetValue(mode, kCGDisplayRefreshRate), kCFNumberSInt32Type, &new_refresh_rate);
-   if (new_refresh_rate <= 0)
-      new_refresh_rate = 70;
-   refresh_rate = new_refresh_rate;
 }
 
 
@@ -179,20 +143,20 @@ static void call_user_main(void)
    real_main(__crt0_argc, __crt0_argv);
    allegro_exit();
    ready_to_terminate = YES;
+   runOnMainQueueWithoutDeadlocking(^{
+     [NSApp terminate:nil];
+   });
 }
-
-
 
 /* app_main:
  *  Thread dedicated to the user program; real main() gets called here.
  */
 + (void)app_main: (id)arg
 {
-   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-   call_user_main();
-   [pool release];
+  @autoreleasepool {
+    call_user_main();
+  }
 }
-
 
 
 /* applicationShouldTerminate:
@@ -242,37 +206,23 @@ static void call_user_main(void)
 
 
 
-/* This prevents warnings that 'NSApplication might not
- * respond to setAppleMenu' on OS X 10.4
- */
-@interface NSApplication(AllegroOSX)
-- (void)setAppleMenu:(NSMenu *)menu;
-@end
-
-
-
 /* main:
  *  Replacement for main function.
  */
 int main(int argc, char *argv[])
 {
-   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-   AllegroAppDelegate *app_delegate = [[AllegroAppDelegate alloc] init];
+   @autoreleasepool {
+
    NSMenu *menu;
    NSMenuItem *menu_item, *temp_item;
 
-   /* I don't know what that NSAutoreleasePool line does but the variable was
-    * otherwise unused --pw
-    */
-   (void)pool;
-
    __crt0_argc = argc;
    __crt0_argv = argv;
-   
-   if (!osx_bootstrap_ok()) /* not safe to use NSApplication */
-      call_user_main();
-      
-   [NSApplication sharedApplication];
+
+   AllegroAppDelegate *app_delegate = [[AllegroAppDelegate alloc] init];
+
+    [NSApplication sharedApplication];
+    [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
 
    /* Load the main menu nib if possible */
    if ((!in_bundle()) || ([NSBundle loadNibNamed: @"MainMenu"
@@ -281,39 +231,40 @@ int main(int argc, char *argv[])
        /* Didn't load the nib; create a default menu programmatically */
        NSString* title = nil;
        NSDictionary* app_dictionary = [[NSBundle mainBundle] infoDictionary];
-       if (app_dictionary) 
+       if (app_dictionary)
        {
           title = [app_dictionary objectForKey: @"CFBundleName"];
        }
-       if (title == nil) 
+       if (title == nil)
        {
           title = [[NSProcessInfo processInfo] processName];
        }
        [NSApp setMainMenu: [[NSMenu allocWithZone: [NSMenu menuZone]] initWithTitle: @"temp"]];
        menu = [[NSMenu allocWithZone: [NSMenu menuZone]] initWithTitle: @"temp"];
        temp_item = [[NSMenuItem allocWithZone: [NSMenu menuZone]]
-		     initWithTitle: @"temp"
-		     action: NULL
-		     keyEquivalent: @""];
+                     initWithTitle: @"temp"
+                     action: NULL
+                     keyEquivalent: @""];
        [[NSApp mainMenu] addItem: temp_item];
        [[NSApp mainMenu] setSubmenu: menu forItem: temp_item];
        [NSApp setAppleMenu: menu];
        NSString *quit = [@"Quit " stringByAppendingString: title];
        menu_item = [[NSMenuItem allocWithZone: [NSMenu menuZone]]
-		     initWithTitle: quit
-		     action: @selector(quitAction:)
-		     keyEquivalent: @"q"];
+                     initWithTitle: quit
+                     action: @selector(quitAction:)
+                     keyEquivalent: @"q"];
        [menu_item setKeyEquivalentModifierMask: NSCommandKeyMask];
        [menu_item setTarget: app_delegate];
        [menu addItem: menu_item];
    }
 
    [NSApp setDelegate: app_delegate];
-   
+
    [NSApp run];
    /* Can never get here */
-   
+
    return 0;
+   }
 }
 
 /* Local variables:       */

@@ -49,7 +49,7 @@ void setup_direct_shifts(void)
    _rgb_b_shift_32 = 0;
 }
 
-
+#ifdef ENABLE_QUICKDRAW
 
 /* osx_qz_write_line:
  *  Line switcher for video bitmaps.
@@ -254,3 +254,5 @@ void osx_qz_blit_to_self(BITMAP *source, BITMAP *dest, int source_x, int source_
    if (!(dest->id & BMP_ID_LOCKED))
       UnlockPortBits(BMP_EXTRA(dest)->port);
 }
+
+#endif

@@ -42,7 +42,6 @@
       #import <CoreAudio/CoreAudio.h>
       #import <AudioUnit/AudioUnit.h>
       #import <AudioToolbox/AudioToolbox.h>
-      #import <QuickTime/QuickTime.h>
       #import <IOKit/IOKitLib.h>
       #import <IOKit/IOCFPlugIn.h>
       #import <IOKit/hid/IOHIDLib.h>
@@ -92,8 +91,12 @@ AL_VAR(MOUSE_DRIVER, mouse_macosx);
 /* Gfx drivers */
 #define GFX_QUARTZ_WINDOW       AL_ID('Q','Z','W','N')
 #define GFX_QUARTZ_FULLSCREEN   AL_ID('Q','Z','F','L')
+#define GFX_COCOAGL_WINDOW      AL_ID('C','O','W','N')
+#define GFX_COCOAGL_FULLSCREEN  AL_ID('C','O','F','L')
 AL_VAR(GFX_DRIVER, gfx_quartz_window);
 AL_VAR(GFX_DRIVER, gfx_quartz_full);
+AL_VAR(GFX_DRIVER, gfx_cocoagl_window);
+AL_VAR(GFX_DRIVER, gfx_cocoagl_full);
 
 /* Digital sound drivers */
 #define DIGI_CORE_AUDIO         AL_ID('D','C','A',' ')
@@ -103,9 +106,7 @@ AL_VAR(DIGI_DRIVER, digi_sound_manager);
 
 /* MIDI music drivers */
 #define MIDI_CORE_AUDIO         AL_ID('M','C','A',' ')
-#define MIDI_QUICKTIME          AL_ID('Q','T','M',' ')
 AL_VAR(MIDI_DRIVER, midi_core_audio);
-AL_VAR(MIDI_DRIVER, midi_quicktime);
 
 /* Joystick drivers */
 #define JOYSTICK_HID            AL_ID('H','I','D','J')

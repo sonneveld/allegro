@@ -308,13 +308,11 @@ set(ALLEGRO_SRC_MACOSX_FILES
         src/macosx/hidman.m
         src/macosx/keybd.m
         src/macosx/pcpu.m
-        src/macosx/qtmidi.m
         src/macosx/quartz.m
-        src/macosx/qzfull.m
         src/macosx/qzmouse.m
-        src/macosx/qzwindow.m
-        src/macosx/soundman.m
         src/macosx/system.m
+        src/macosx/cocoagl.m
+        src/macosx/cocoashared.m
         src/unix/ufile.c
         src/unix/utimer.c
         src/unix/uptimer.c
