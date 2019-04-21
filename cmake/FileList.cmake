@@ -8,7 +8,6 @@ set(ALLEGRO_SRC_FILES
         src/unicode.c
 
         src/file.c
-        src/lzss.c
 
         src/readbmp.c
         src/quantize.c
@@ -34,11 +33,6 @@ set(ALLEGRO_SRC_FILES
         src/vtable8.c
 
         src/dataregi.c
-        src/digmid.c
-        src/midi.c
-        src/mixer.c
-        src/sound.c
-        src/stream.c
         )
 
 set(ALLEGRO_SRC_C_FILES
