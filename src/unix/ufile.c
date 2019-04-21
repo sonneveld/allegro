@@ -78,24 +78,6 @@ uint64_t _al_file_size_ex(AL_CONST char *filename)
 
 
 
-/* _al_file_time:
- *  Returns the timestamp of the specified file.
- */
-time_t _al_file_time(AL_CONST char *filename)
-{
-   struct stat s;
-   char tmp[1024];
-
-   if (stat(uconvert(filename, U_CURRENT, tmp, U_UTF8, sizeof(tmp)), &s) != 0) {
-      *allegro_errno = errno;
-      return 0;
-   }
-
-   return s.st_mtime;
-}
-
-
-
 /* ff_get_filename:
  *  When passed a completely specified file path, this returns a pointer
  *  to the filename portion.
@@ -479,50 +461,4 @@ void _al_getdcwd(int drive, char *buf, int size)
       do_uconvert(tmp, U_UTF8, buf, U_CURRENT, size);
    else
       usetc(buf, 0);
-}
-
-
-
-/* _al_ffblk_get_size:
- *  Returns the size out of an _al_ffblk structure.
- */
-uint64_t al_ffblk_get_size(struct al_ffblk *info)
-{
-   struct FF_DATA *ff_data;
-   ASSERT(info);
-   ff_data = (struct FF_DATA *) info->ff_data;
-   ASSERT(ff_data);
-   return ff_data->size;
-}
-
-
-
-/* _al_detect_filename_encoding:
- *  Platform specific function to detect the filename encoding. This is called
- *  after setting a system driver, and even if this driver is SYSTEM_NONE.
- */
-void _al_detect_filename_encoding(void)
-{
-   char const *encoding = "unknown";
-   char *locale = getenv("LC_ALL");
-
-   if (!locale || !locale[0]) {
-      locale = getenv("LC_CTYPE");
-      if (!locale || !locale[0])
-         locale = getenv("LANG");
-   }
-
-   if (locale) {
-      if (strstr(locale, "utf8") ||
-          strstr(locale, "UTF-8") ||
-          strstr(locale, "utf-8") ||
-          strstr(locale, "UTF8")) {
-         /* Note: UTF8 is default anyway. */
-         set_filename_encoding(U_UTF8);
-         encoding = "UTF8";
-      }
-      /* TODO: detect other encodings, and support them in Allegro */
-   }
-
-   TRACE(PREFIX_I "Assumed libc encoding is %s.\n", encoding);
 }
