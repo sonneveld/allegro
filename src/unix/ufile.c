@@ -240,6 +240,8 @@ static int ff_match(AL_CONST char *s1, AL_CONST char *s2)
 static int ff_get_attrib(AL_CONST char *name, struct stat *s)
 {
    int attrib = 0;
+
+#if ALLEGRO_CHECK_FILE_PERMISSIONS
    uid_t euid = geteuid();
 
    if (euid != 0) {
@@ -255,6 +257,7 @@ static int ff_get_attrib(AL_CONST char *name, struct stat *s)
 	 attrib |= FA_RDONLY;
       }
    }
+#endif
 
    if (S_ISDIR(s->st_mode))
       attrib |= FA_DIREC;
